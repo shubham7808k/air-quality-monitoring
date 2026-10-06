@@ -1,0 +1,3051 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        AirSense | Air Quality Monitoring
+    </title>
+
+
+    <style>
+
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+
+        :root {
+
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+
+            --green: #16a34a;
+            --yellow: #eab308;
+            --orange: #ea580c;
+            --red: #dc2626;
+            --purple: #7c3aed;
+
+            --background: #f5f7fb;
+            --surface: #ffffff;
+
+            --text: #172033;
+            --muted: #6b7280;
+
+            --border: #e5e7eb;
+
+            --shadow:
+                0 8px 30px rgba(15, 23, 42, 0.07);
+
+            --radius: 18px;
+        }
+
+
+        body.dark {
+
+            --background: #0f172a;
+            --surface: #1e293b;
+
+            --text: #f8fafc;
+            --muted: #94a3b8;
+
+            --border: #334155;
+
+        }
+
+
+        body {
+
+            font-family:
+                "Segoe UI",
+                Arial,
+                sans-serif;
+
+            background:
+                var(--background);
+
+            color:
+                var(--text);
+
+            min-height: 100vh;
+
+            transition:
+                0.3s ease;
+
+        }
+
+
+        /* =====================================================
+           APP LAYOUT
+        ===================================================== */
+
+        .app {
+
+            display: flex;
+
+            min-height: 100vh;
+
+        }
+
+
+        /* =====================================================
+           SIDEBAR
+        ===================================================== */
+
+        .sidebar {
+
+            width: 245px;
+
+            background:
+                #111827;
+
+            color: white;
+
+            padding: 25px 18px;
+
+            position: fixed;
+
+            left: 0;
+            top: 0;
+
+            height: 100vh;
+
+            display: flex;
+
+            flex-direction: column;
+
+            z-index: 100;
+
+        }
+
+
+        .brand {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            padding: 5px 10px 30px;
+
+        }
+
+
+        .brand-icon {
+
+            width: 42px;
+            height: 42px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #22c55e,
+                    #16a34a
+                );
+
+            border-radius: 12px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 23px;
+
+        }
+
+
+        .brand h2 {
+
+            font-size: 18px;
+
+        }
+
+
+        .brand span {
+
+            display: block;
+
+            color: #9ca3af;
+
+            font-size: 11px;
+
+            margin-top: 2px;
+
+        }
+
+
+        .nav-title {
+
+            color: #6b7280;
+
+            font-size: 10px;
+
+            text-transform: uppercase;
+
+            letter-spacing: 1px;
+
+            padding: 0 12px;
+
+            margin-bottom: 10px;
+
+        }
+
+
+        .nav-item {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            padding: 12px;
+
+            border-radius: 10px;
+
+            margin-bottom: 5px;
+
+            color: #cbd5e1;
+
+            cursor: pointer;
+
+            transition: 0.25s;
+
+            font-size: 14px;
+
+        }
+
+
+        .nav-item:hover,
+
+        .nav-item.active {
+
+            background:
+                rgba(255,255,255,0.08);
+
+            color: white;
+
+        }
+
+
+        .nav-item.active {
+
+            border-left:
+                3px solid #22c55e;
+
+        }
+
+
+        .sidebar-bottom {
+
+            margin-top: auto;
+
+            border-top:
+                1px solid #374151;
+
+            padding-top: 15px;
+
+        }
+
+
+        /* =====================================================
+           MAIN
+        ===================================================== */
+
+        .main {
+
+            margin-left: 245px;
+
+            width: calc(100% - 245px);
+
+            padding: 25px 30px;
+
+        }
+
+
+        /* =====================================================
+           TOP BAR
+        ===================================================== */
+
+        .topbar {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            margin-bottom: 25px;
+
+        }
+
+
+        .page-title h1 {
+
+            font-size: 25px;
+
+            margin-bottom: 4px;
+
+        }
+
+
+        .page-title p {
+
+            color: var(--muted);
+
+            font-size: 13px;
+
+        }
+
+
+        .top-actions {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+        }
+
+
+        .live {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 7px;
+
+            padding: 9px 13px;
+
+            background: var(--surface);
+
+            border:
+                1px solid var(--border);
+
+            border-radius: 10px;
+
+            font-size: 12px;
+
+        }
+
+
+        .live-dot {
+
+            width: 8px;
+            height: 8px;
+
+            background:
+                #22c55e;
+
+            border-radius: 50%;
+
+            animation:
+                pulse 1.5s infinite;
+
+        }
+
+
+        .action-btn {
+
+            border: none;
+
+            background: var(--surface);
+
+            color: var(--text);
+
+            border:
+                1px solid var(--border);
+
+            padding: 10px 14px;
+
+            border-radius: 10px;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+
+        }
+
+
+        .action-btn:hover {
+
+            transform:
+                translateY(-2px);
+
+        }
+
+
+        .refresh-btn {
+
+            background:
+                var(--primary);
+
+            color: white;
+
+            border: none;
+
+        }
+
+
+        /* =====================================================
+           HERO AQI
+        ===================================================== */
+
+        .hero {
+
+            display: grid;
+
+            grid-template-columns:
+                1.5fr 1fr;
+
+            gap: 20px;
+
+            margin-bottom: 20px;
+
+        }
+
+
+        .aqi-panel {
+
+            background:
+                var(--surface);
+
+            border-radius:
+                var(--radius);
+
+            padding: 28px;
+
+            box-shadow:
+                var(--shadow);
+
+            position: relative;
+
+            overflow: hidden;
+
+        }
+
+
+        .aqi-panel::after {
+
+            content: "";
+
+            position: absolute;
+
+            width: 240px;
+            height: 240px;
+
+            border-radius: 50%;
+
+            background:
+                rgba(37,99,235,0.05);
+
+            right: -100px;
+            top: -100px;
+
+        }
+
+
+        .panel-label {
+
+            color: var(--muted);
+
+            font-size: 12px;
+
+            text-transform:
+                uppercase;
+
+            letter-spacing:
+                1px;
+
+            margin-bottom: 12px;
+
+        }
+
+
+        .aqi-content {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 30px;
+
+        }
+
+
+        .aqi-number {
+
+            font-size: 78px;
+
+            font-weight: 800;
+
+            line-height: 1;
+
+        }
+
+
+        .aqi-info h2 {
+
+            font-size: 23px;
+
+            margin-bottom: 5px;
+
+        }
+
+
+        .aqi-info p {
+
+            color: var(--muted);
+
+            font-size: 13px;
+
+        }
+
+
+        .aqi-scale {
+
+            display: flex;
+
+            gap: 4px;
+
+            margin-top: 25px;
+
+        }
+
+
+        .scale {
+
+            height: 7px;
+
+            flex: 1;
+
+            border-radius: 10px;
+
+        }
+
+
+        .scale.green {
+            background: #22c55e;
+        }
+
+        .scale.yellow {
+            background: #eab308;
+        }
+
+        .scale.orange {
+            background: #f97316;
+        }
+
+        .scale.red {
+            background: #ef4444;
+        }
+
+        .scale.purple {
+            background: #7c3aed;
+        }
+
+
+        /* =====================================================
+           SUMMARY
+        ===================================================== */
+
+        .summary-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, 1fr);
+
+            gap: 15px;
+
+        }
+
+
+        .summary-card {
+
+            background:
+                var(--surface);
+
+            border-radius:
+                var(--radius);
+
+            padding: 20px;
+
+            box-shadow:
+                var(--shadow);
+
+        }
+
+
+        .summary-top {
+
+            display: flex;
+
+            justify-content:
+                space-between;
+
+            align-items: center;
+
+            margin-bottom: 15px;
+
+        }
+
+
+        .summary-icon {
+
+            width: 38px;
+            height: 38px;
+
+            border-radius: 10px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 18px;
+
+            background:
+                #eff6ff;
+
+        }
+
+
+        .summary-label {
+
+            color: var(--muted);
+
+            font-size: 12px;
+
+        }
+
+
+        .summary-value {
+
+            font-size: 25px;
+
+            font-weight: 750;
+
+        }
+
+
+        .summary-small {
+
+            color: var(--muted);
+
+            font-size: 11px;
+
+            margin-top: 3px;
+
+        }
+
+
+        /* =====================================================
+           SECTION HEADER
+        ===================================================== */
+
+        .section-header {
+
+            display: flex;
+
+            justify-content:
+                space-between;
+
+            align-items: center;
+
+            margin:
+                28px 0 15px;
+
+        }
+
+
+        .section-header h2 {
+
+            font-size: 18px;
+
+        }
+
+
+        .section-header p {
+
+            color: var(--muted);
+
+            font-size: 12px;
+
+        }
+
+
+        /* =====================================================
+           POLLUTANTS
+        ===================================================== */
+
+        .pollutant-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, 1fr);
+
+            gap: 15px;
+
+        }
+
+
+        .pollutant-card {
+
+            background:
+                var(--surface);
+
+            padding: 18px;
+
+            border-radius:
+                var(--radius);
+
+            box-shadow:
+                var(--shadow);
+
+        }
+
+
+        .pollutant-header {
+
+            display: flex;
+
+            justify-content:
+                space-between;
+
+            margin-bottom: 12px;
+
+        }
+
+
+        .pollutant-name {
+
+            font-weight: 650;
+
+            font-size: 14px;
+
+        }
+
+
+        .pollutant-value {
+
+            font-size: 20px;
+
+            font-weight: 750;
+
+        }
+
+
+        .pollutant-unit {
+
+            color: var(--muted);
+
+            font-size: 10px;
+
+        }
+
+
+        .bar {
+
+            height: 6px;
+
+            background:
+                var(--background);
+
+            border-radius: 10px;
+
+            overflow: hidden;
+
+            margin-top: 12px;
+
+        }
+
+
+        .bar-fill {
+
+            height: 100%;
+
+            border-radius: 10px;
+
+            width: 60%;
+
+            background:
+                var(--primary);
+
+            transition:
+                width 1s ease;
+
+        }
+
+
+        /* =====================================================
+           ALERTS
+        ===================================================== */
+
+        .alert-panel {
+
+            background:
+                var(--surface);
+
+            border-radius:
+                var(--radius);
+
+            box-shadow:
+                var(--shadow);
+
+            padding: 20px;
+
+        }
+
+
+        .alert-item {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            padding: 13px;
+
+            border-radius: 10px;
+
+            margin-bottom: 8px;
+
+        }
+
+
+        .alert-item:last-child {
+
+            margin-bottom: 0;
+
+        }
+
+
+        .alert-icon {
+
+            width: 35px;
+            height: 35px;
+
+            border-radius: 9px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+        }
+
+
+        .critical {
+
+            background:
+                #fef2f2;
+
+        }
+
+
+        .critical .alert-icon {
+
+            background:
+                #fee2e2;
+
+        }
+
+
+        .high {
+
+            background:
+                #fff7ed;
+
+        }
+
+
+        .high .alert-icon {
+
+            background:
+                #ffedd5;
+
+        }
+
+
+        .medium {
+
+            background:
+                #fefce8;
+
+        }
+
+
+        .medium .alert-icon {
+
+            background:
+                #fef9c3;
+
+        }
+
+
+        .alert-message {
+
+            font-size: 13px;
+
+        }
+
+
+        .alert-time {
+
+            margin-left: auto;
+
+            color: var(--muted);
+
+            font-size: 10px;
+
+        }
+
+
+        /* =====================================================
+           SEARCH
+        ===================================================== */
+
+        .sensor-tools {
+
+            display: flex;
+
+            gap: 10px;
+
+        }
+
+
+        .search {
+
+            padding: 10px 14px;
+
+            width: 230px;
+
+            border:
+                1px solid var(--border);
+
+            border-radius: 10px;
+
+            background:
+                var(--surface);
+
+            color:
+                var(--text);
+
+            outline: none;
+
+        }
+
+
+        /* =====================================================
+           SENSOR GRID
+        ===================================================== */
+
+        .sensor-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 18px;
+
+        }
+
+
+        .sensor-card {
+
+            background:
+                var(--surface);
+
+            border-radius:
+                var(--radius);
+
+            padding: 20px;
+
+            box-shadow:
+                var(--shadow);
+
+            transition:
+                0.3s;
+
+            border:
+                1px solid transparent;
+
+        }
+
+
+        .sensor-card:hover {
+
+            transform:
+                translateY(-5px);
+
+            border-color:
+                var(--primary);
+
+        }
+
+
+        .sensor-head {
+
+            display: flex;
+
+            justify-content:
+                space-between;
+
+            align-items: flex-start;
+
+            margin-bottom: 18px;
+
+        }
+
+
+        .sensor-name {
+
+            font-weight: 700;
+
+            font-size: 15px;
+
+        }
+
+
+        .sensor-location {
+
+            color: var(--muted);
+
+            font-size: 11px;
+
+            margin-top: 4px;
+
+        }
+
+
+        .sensor-status {
+
+            font-size: 10px;
+
+            padding: 5px 8px;
+
+            border-radius: 20px;
+
+            background:
+                #dcfce7;
+
+            color:
+                #166534;
+
+        }
+
+
+        .sensor-aqi {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            padding-bottom: 15px;
+
+            border-bottom:
+                1px solid var(--border);
+
+        }
+
+
+        .sensor-aqi-number {
+
+            font-size: 38px;
+
+            font-weight: 800;
+
+        }
+
+
+        .sensor-category {
+
+            color: var(--muted);
+
+            font-size: 11px;
+
+        }
+
+
+        .measurement-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                1fr 1fr;
+
+            gap: 12px;
+
+            margin-top: 16px;
+
+        }
+
+
+        .measurement {
+
+            padding: 10px;
+
+            background:
+                var(--background);
+
+            border-radius: 9px;
+
+        }
+
+
+        .measurement-label {
+
+            color: var(--muted);
+
+            font-size: 10px;
+
+            margin-bottom: 4px;
+
+        }
+
+
+        .measurement-value {
+
+            font-size: 14px;
+
+            font-weight: 700;
+
+        }
+
+
+        .sensor-footer {
+
+            margin-top: 15px;
+
+            padding-top: 12px;
+
+            border-top:
+                1px solid var(--border);
+
+            color: var(--muted);
+
+            font-size: 10px;
+
+            display: flex;
+
+            justify-content:
+                space-between;
+
+        }
+
+
+        /* =====================================================
+           EMPTY
+        ===================================================== */
+
+        .empty {
+
+            background:
+                var(--surface);
+
+            padding: 45px;
+
+            text-align: center;
+
+            border-radius:
+                var(--radius);
+
+            color: var(--muted);
+
+        }
+
+
+        /* =====================================================
+           LOADING
+        ===================================================== */
+
+        #loading {
+
+            padding:
+                100px 20px;
+
+            text-align:
+                center;
+
+        }
+
+
+        .spinner {
+
+            width: 45px;
+
+            height: 45px;
+
+            border:
+                4px solid #e5e7eb;
+
+            border-top-color:
+                var(--primary);
+
+            border-radius: 50%;
+
+            animation:
+                spin 1s linear infinite;
+
+            margin:
+                auto auto 15px;
+
+        }
+
+
+        /* =====================================================
+           TOAST
+        ===================================================== */
+
+        .toast {
+
+            position: fixed;
+
+            bottom: 25px;
+
+            right: 25px;
+
+            background:
+                #111827;
+
+            color: white;
+
+            padding: 13px 18px;
+
+            border-radius: 10px;
+
+            transform:
+                translateY(100px);
+
+            opacity: 0;
+
+            transition:
+                0.3s;
+
+            z-index: 999;
+
+            font-size: 13px;
+
+        }
+
+
+        .toast.show {
+
+            transform:
+                translateY(0);
+
+            opacity: 1;
+
+        }
+
+
+        /* =====================================================
+           ANIMATIONS
+        ===================================================== */
+
+        @keyframes spin {
+
+            to {
+                transform: rotate(360deg);
+            }
+
+        }
+
+
+        @keyframes pulse {
+
+            0% {
+                box-shadow:
+                    0 0 0 0
+                    rgba(34,197,94,0.5);
+            }
+
+            70% {
+                box-shadow:
+                    0 0 0 8px
+                    rgba(34,197,94,0);
+            }
+
+            100% {
+                box-shadow:
+                    0 0 0 0
+                    rgba(34,197,94,0);
+            }
+
+        }
+
+
+        /* =====================================================
+           RESPONSIVE
+        ===================================================== */
+
+        @media(max-width:1100px) {
+
+            .sensor-grid {
+
+                grid-template-columns:
+                    repeat(2,1fr);
+
+            }
+
+            .pollutant-grid {
+
+                grid-template-columns:
+                    repeat(2,1fr);
+
+            }
+
+        }
+
+
+        @media(max-width:800px) {
+
+            .sidebar {
+
+                width: 70px;
+
+                padding:
+                    20px 10px;
+
+            }
+
+
+            .brand h2,
+            .brand span,
+            .nav-title,
+            .nav-item span {
+
+                display: none;
+
+            }
+
+
+            .brand {
+
+                justify-content:
+                    center;
+
+                padding:
+                    5px 0 30px;
+
+            }
+
+
+            .nav-item {
+
+                justify-content:
+                    center;
+
+            }
+
+
+            .main {
+
+                margin-left:
+                    70px;
+
+                width:
+                    calc(100% - 70px);
+
+                padding:
+                    18px;
+
+            }
+
+
+            .hero {
+
+                grid-template-columns:
+                    1fr;
+
+            }
+
+        }
+
+
+        @media(max-width:600px) {
+
+            .topbar {
+
+                flex-direction:
+                    column;
+
+                align-items:
+                    flex-start;
+
+                gap: 15px;
+
+            }
+
+
+            .top-actions {
+
+                width: 100%;
+
+            }
+
+
+            .live {
+
+                flex: 1;
+
+            }
+
+
+            .summary-grid {
+
+                grid-template-columns:
+                    1fr;
+
+            }
+
+
+            .pollutant-grid {
+
+                grid-template-columns:
+                    1fr 1fr;
+
+            }
+
+
+            .sensor-grid {
+
+                grid-template-columns:
+                    1fr;
+
+            }
+
+
+            .sensor-tools {
+
+                width: 100%;
+
+            }
+
+
+            .search {
+
+                width: 100%;
+
+            }
+
+
+            .section-header {
+
+                flex-direction:
+                    column;
+
+                align-items:
+                    flex-start;
+
+                gap: 10px;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="app">
+
+
+    <!-- =====================================================
+         SIDEBAR
+    ===================================================== -->
+
+    <aside class="sidebar">
+
+
+        <div class="brand">
+
+            <div class="brand-icon">
+                🌿
+            </div>
+
+            <div>
+
+                <h2>
+                    AirSense
+                </h2>
+
+                <span>
+                    Smart Air Monitoring
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="nav-title">
+            Monitoring
+        </div>
+
+
+        <div class="nav-item active">
+            📊
+            <span>
+                Dashboard
+            </span>
+        </div>
+
+
+        <div class="nav-item">
+            📡
+            <span>
+                Sensors
+            </span>
+        </div>
+
+
+        <div class="nav-item">
+            ⚠️
+            <span>
+                Alerts
+            </span>
+        </div>
+
+
+        <div class="nav-item">
+            📈
+            <span>
+                Analytics
+            </span>
+        </div>
+
+
+        <div class="nav-item">
+            🗺️
+            <span>
+                Locations
+            </span>
+        </div>
+
+
+        <div class="sidebar-bottom">
+
+            <div
+                class="nav-item"
+                onclick="toggleDarkMode()"
+            >
+
+                🌙
+
+                <span>
+                    Dark Mode
+                </span>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ===================================================== -->
+
+    <main class="main">
+
+
+        <!-- TOP BAR -->
+
+        <div class="topbar">
+
+
+            <div class="page-title">
+
+                <h1>
+                    Air Quality Dashboard
+                </h1>
+
+                <p>
+                    Hyperlocal monitoring across
+                    educational locations
+                </p>
+
+            </div>
+
+
+            <div class="top-actions">
+
+
+                <div class="live">
+
+                    <span class="live-dot"></span>
+
+                    Live Monitoring
+
+                </div>
+
+
+                <button
+                    class="action-btn"
+                    onclick="toggleDarkMode()"
+                >
+                    🌙
+                </button>
+
+
+                <button
+                    class="action-btn refresh-btn"
+                    onclick="loadDashboard(true)"
+                >
+                    🔄 Refresh
+                </button>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             LOADING
+        ================================================= -->
+
+        <div id="loading">
+
+            <div class="spinner"></div>
+
+            <p>
+                Loading air quality data...
+            </p>
+
+        </div>
+
+
+
+        <!-- =================================================
+             DASHBOARD
+        ================================================= -->
+
+        <div
+            id="content"
+            style="display:none;"
+        >
+
+
+            <!-- =================================================
+                 HERO
+            ================================================= -->
+
+            <section class="hero">
+
+
+                <!-- AQI -->
+
+                <div class="aqi-panel">
+
+                    <div class="panel-label">
+                        Campus Air Quality
+                    </div>
+
+
+                    <div class="aqi-content">
+
+
+                        <div
+                            class="aqi-number"
+                            id="avg-value"
+                        >
+                            --
+                        </div>
+
+
+                        <div class="aqi-info">
+
+                            <h2 id="avg-category">
+                                Loading...
+                            </h2>
+
+                            <p>
+                                Average Air Quality Index
+                            </p>
+
+                            <p
+                                style="margin-top:6px;"
+                            >
+                                Last update:
+                                <strong
+                                    id="last-update"
+                                >
+                                    --
+                                </strong>
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="aqi-scale">
+
+                        <div class="scale green"></div>
+
+                        <div class="scale yellow"></div>
+
+                        <div class="scale orange"></div>
+
+                        <div class="scale red"></div>
+
+                        <div class="scale purple"></div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- SUMMARY -->
+
+                <div class="summary-grid">
+
+
+                    <div class="summary-card">
+
+                        <div class="summary-top">
+
+                            <div>
+                                <div class="summary-label">
+                                    Maximum AQI
+                                </div>
+
+                                <div
+                                    class="summary-value"
+                                    id="max-value"
+                                >
+                                    --
+                                </div>
+                            </div>
+
+                            <div class="summary-icon">
+                                🔴
+                            </div>
+
+                        </div>
+
+                        <div
+                            class="summary-small"
+                            id="worst-location"
+                        >
+                            --
+                        </div>
+
+                    </div>
+
+
+                    <div class="summary-card">
+
+                        <div class="summary-top">
+
+                            <div>
+
+                                <div class="summary-label">
+                                    Minimum AQI
+                                </div>
+
+                                <div
+                                    class="summary-value"
+                                    id="min-value"
+                                >
+                                    --
+                                </div>
+
+                            </div>
+
+                            <div class="summary-icon">
+                                🟢
+                            </div>
+
+                        </div>
+
+                        <div class="summary-small">
+                            Lowest recorded reading
+                        </div>
+
+                    </div>
+
+
+                    <div class="summary-card">
+
+                        <div class="summary-top">
+
+                            <div>
+
+                                <div class="summary-label">
+                                    Active Sensors
+                                </div>
+
+                                <div
+                                    class="summary-value"
+                                    id="sensor-count"
+                                >
+                                    0
+                                </div>
+
+                            </div>
+
+                            <div class="summary-icon">
+                                📡
+                            </div>
+
+                        </div>
+
+                        <div class="summary-small">
+                            Monitoring nodes online
+                        </div>
+
+                    </div>
+
+
+                    <div class="summary-card">
+
+                        <div class="summary-top">
+
+                            <div>
+
+                                <div class="summary-label">
+                                    Next Update
+                                </div>
+
+                                <div
+                                    class="summary-value"
+                                    id="countdown"
+                                >
+                                    15s
+                                </div>
+
+                            </div>
+
+                            <div class="summary-icon">
+                                ⏱️
+                            </div>
+
+                        </div>
+
+                        <div class="summary-small">
+                            Automatic refresh interval
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =================================================
+                 POLLUTANTS
+            ================================================= -->
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>
+                        Pollutant Overview
+                    </h2>
+
+                    <p>
+                        Current environmental measurements
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="pollutant-grid">
+
+
+                <div class="pollutant-card">
+
+                    <div class="pollutant-header">
+
+                        <span class="pollutant-name">
+                            PM2.5
+                        </span>
+
+                        <span
+                            class="pollutant-value"
+                            id="avg-pm25"
+                        >
+                            --
+                        </span>
+
+                    </div>
+
+                    <span class="pollutant-unit">
+                        µg/m³
+                    </span>
+
+                    <div class="bar">
+
+                        <div
+                            class="bar-fill"
+                            id="pm25-bar"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="pollutant-card">
+
+                    <div class="pollutant-header">
+
+                        <span class="pollutant-name">
+                            PM10
+                        </span>
+
+                        <span
+                            class="pollutant-value"
+                            id="avg-pm10"
+                        >
+                            --
+                        </span>
+
+                    </div>
+
+                    <span class="pollutant-unit">
+                        µg/m³
+                    </span>
+
+                    <div class="bar">
+
+                        <div
+                            class="bar-fill"
+                            id="pm10-bar"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="pollutant-card">
+
+                    <div class="pollutant-header">
+
+                        <span class="pollutant-name">
+                            Temperature
+                        </span>
+
+                        <span
+                            class="pollutant-value"
+                            id="avg-temp"
+                        >
+                            --
+                        </span>
+
+                    </div>
+
+                    <span class="pollutant-unit">
+                        °C
+                    </span>
+
+                    <div class="bar">
+
+                        <div
+                            class="bar-fill"
+                            id="temp-bar"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="pollutant-card">
+
+                    <div class="pollutant-header">
+
+                        <span class="pollutant-name">
+                            Humidity
+                        </span>
+
+                        <span
+                            class="pollutant-value"
+                            id="avg-humidity"
+                        >
+                            --
+                        </span>
+
+                    </div>
+
+                    <span class="pollutant-unit">
+                        %
+                    </span>
+
+                    <div class="bar">
+
+                        <div
+                            class="bar-fill"
+                            id="humidity-bar"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 ALERTS
+            ================================================= -->
+
+            <div
+                id="alerts-section"
+                style="display:none;"
+            >
+
+                <div class="section-header">
+
+                    <div>
+
+                        <h2>
+                            ⚠️ Air Quality Alerts
+                        </h2>
+
+                        <p>
+                            Issues requiring attention
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="alert-panel">
+
+                    <div id="alerts-list"></div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 SENSOR MONITORING
+            ================================================= -->
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>
+                        📡 Sensor Monitoring
+                    </h2>
+
+                    <p>
+                        Live readings from all monitoring nodes
+                    </p>
+
+                </div>
+
+
+                <div class="sensor-tools">
+
+                    <input
+                        class="search"
+                        id="sensor-search"
+                        type="text"
+                        placeholder="🔍 Search sensors..."
+                        oninput="filterSensors()"
+                    >
+
+                </div>
+
+            </div>
+
+
+            <div
+                class="sensor-grid"
+                id="sensors-grid"
+            ></div>
+
+
+        </div>
+
+
+
+        <!-- FOOTER -->
+
+        <footer
+            style="
+                text-align:center;
+                color:var(--muted);
+                font-size:11px;
+                padding:30px 0 10px;
+            "
+        >
+
+            AirSense Hyperlocal Air Quality Monitoring System
+
+            <br>
+
+            MCA Data Science & Artificial Intelligence Project
+
+        </footer>
+
+
+    </main>
+
+</div>
+
+
+
+<!-- TOAST -->
+
+<div
+    class="toast"
+    id="toast"
+>
+    Dashboard refreshed
+</div>
+
+
+
+<script>
+
+
+    /* =====================================================
+       GLOBAL DATA
+    ===================================================== */
+
+    let dashboardData = null;
+
+    let countdown = 15;
+
+
+
+    /* =====================================================
+       LOAD DASHBOARD
+    ===================================================== */
+
+    async function loadDashboard(showToast = false) {
+
+        try {
+
+            const response =
+                await fetch("/api/dashboard");
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.error ||
+                    "Unable to load dashboard"
+                );
+
+            }
+
+
+            dashboardData = data;
+
+
+            document.getElementById(
+                "loading"
+            ).style.display = "none";
+
+
+            document.getElementById(
+                "content"
+            ).style.display = "block";
+
+
+            updateOverview(data);
+
+            updatePollutants(data);
+
+            displayAlerts(data.alerts || []);
+
+            displaySensors(data.sensors || []);
+
+
+            document.getElementById(
+                "last-update"
+            ).textContent =
+                new Date().toLocaleTimeString();
+
+
+            countdown = 15;
+
+
+            if (showToast) {
+
+                showToastMessage(
+                    "Dashboard updated successfully"
+                );
+
+            }
+
+        }
+
+        catch(error) {
+
+            console.error(error);
+
+
+            document.getElementById(
+                "loading"
+            ).innerHTML = `
+
+                <div style="
+                    font-size:45px;
+                    margin-bottom:15px;
+                ">
+                    ⚠️
+                </div>
+
+                <h2>
+                    Unable to Load Dashboard
+                </h2>
+
+                <p style="
+                    margin-top:8px;
+                    color:#6b7280;
+                ">
+                    ${error.message}
+                </p>
+
+                <button
+                    class="action-btn refresh-btn"
+                    onclick="loadDashboard(true)"
+                    style="margin-top:20px;"
+                >
+                    🔄 Try Again
+                </button>
+
+            `;
+
+        }
+
+    }
+
+
+
+    /* =====================================================
+       OVERVIEW
+    ===================================================== */
+
+    function updateOverview(data) {
+
+        const status =
+            data.overall_status;
+
+
+        if (!status) return;
+
+
+        const avg =
+            Number(status.avg_aqi || 0);
+
+
+        const max =
+            Number(status.max_aqi || 0);
+
+
+        const min =
+            Number(status.min_aqi || 0);
+
+
+        document.getElementById(
+            "avg-value"
+        ).textContent = avg;
+
+
+        document.getElementById(
+            "avg-category"
+        ).textContent =
+            status.status_category ||
+            getAQICategory(avg);
+
+
+        document.getElementById(
+            "max-value"
+        ).textContent = max;
+
+
+        document.getElementById(
+            "min-value"
+        ).textContent = min;
+
+
+        document.getElementById(
+            "worst-location"
+        ).textContent =
+            status.worst_location ||
+            "Highest reading";
+
+
+        document.getElementById(
+            "avg-value"
+        ).style.color =
+            getAQIColor(avg);
+
+    }
+
+
+
+    /* =====================================================
+       POLLUTANT CALCULATION
+    ===================================================== */
+
+    function updatePollutants(data) {
+
+        const sensors =
+            data.sensors || [];
+
+
+        if (!sensors.length) return;
+
+
+        let pm25 = 0;
+
+        let pm10 = 0;
+
+        let temp = 0;
+
+        let humidity = 0;
+
+
+        sensors.forEach(sensor => {
+
+            pm25 += Number(
+                sensor.measurements?.pm25 || 0
+            );
+
+            pm10 += Number(
+                sensor.measurements?.pm10 || 0
+            );
+
+            temp += Number(
+                sensor.measurements?.temperature || 0
+            );
+
+            humidity += Number(
+                sensor.measurements?.humidity || 0
+            );
+
+        });
+
+
+        pm25 /= sensors.length;
+
+        pm10 /= sensors.length;
+
+        temp /= sensors.length;
+
+        humidity /= sensors.length;
+
+
+        document.getElementById(
+            "avg-pm25"
+        ).textContent =
+            pm25.toFixed(1);
+
+
+        document.getElementById(
+            "avg-pm10"
+        ).textContent =
+            pm10.toFixed(1);
+
+
+        document.getElementById(
+            "avg-temp"
+        ).textContent =
+            temp.toFixed(1);
+
+
+        document.getElementById(
+            "avg-humidity"
+        ).textContent =
+            humidity.toFixed(1);
+
+
+        document.getElementById(
+            "pm25-bar"
+        ).style.width =
+            Math.min(
+                (pm25 / 250) * 100,
+                100
+            ) + "%";
+
+
+        document.getElementById(
+            "pm10-bar"
+        ).style.width =
+            Math.min(
+                (pm10 / 300) * 100,
+                100
+            ) + "%";
+
+
+        document.getElementById(
+            "temp-bar"
+        ).style.width =
+            Math.min(
+                (temp / 50) * 100,
+                100
+            ) + "%";
+
+
+        document.getElementById(
+            "humidity-bar"
+        ).style.width =
+            Math.min(
+                humidity,
+                100
+            ) + "%";
+
+    }
+
+
+
+    /* =====================================================
+       SENSOR CARDS
+    ===================================================== */
+
+    function displaySensors(sensors) {
+
+        const grid =
+            document.getElementById(
+                "sensors-grid"
+            );
+
+
+        grid.innerHTML = "";
+
+
+        document.getElementById(
+            "sensor-count"
+        ).textContent =
+            sensors.length;
+
+
+        if (!sensors.length) {
+
+            grid.innerHTML = `
+
+                <div class="empty">
+
+                    <div style="font-size:40px;">
+                        📡
+                    </div>
+
+                    <h3 style="margin:10px;">
+                        No Sensor Data
+                    </h3>
+
+                    <p>
+                        No active sensors were found.
+                    </p>
+
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+
+        sensors.forEach(sensor => {
+
+            const card =
+                document.createElement(
+                    "div"
+                );
+
+
+            card.className =
+                "sensor-card";
+
+
+            card.dataset.search =
+                (
+                    sensor.name +
+                    " " +
+                    sensor.location_type
+                ).toLowerCase();
+
+
+            const aqi =
+                Number(
+                    sensor.aqi?.value || 0
+                );
+
+
+            const color =
+                sensor.aqi?.color ||
+                getAQIColor(aqi);
+
+
+            const category =
+                sensor.aqi?.category ||
+                getAQICategory(aqi);
+
+
+            const pm25 =
+                sensor.measurements?.pm25 ??
+                "--";
+
+
+            const pm10 =
+                sensor.measurements?.pm10 ??
+                "--";
+
+
+            const temp =
+                sensor.measurements?.temperature ??
+                "--";
+
+
+            const humidity =
+                sensor.measurements?.humidity ??
+                "--";
+
+
+            const pollutant =
+                sensor.aqi?.dominant_pollutant ||
+                "N/A";
+
+
+            const updated =
+                sensor.timestamp
+                ? new Date(
+                    sensor.timestamp
+                  ).toLocaleTimeString()
+                : "--";
+
+
+            card.innerHTML = `
+
+                <div class="sensor-head">
+
+                    <div>
+
+                        <div class="sensor-name">
+                            📍 ${escapeHTML(
+                                sensor.name ||
+                                "Unknown Sensor"
+                            )}
+                        </div>
+
+                        <div class="sensor-location">
+                            ${escapeHTML(
+                                sensor.location_type ||
+                                "Monitoring Location"
+                            )}
+                        </div>
+
+                    </div>
+
+
+                    <span class="sensor-status">
+                        ● Online
+                    </span>
+
+                </div>
+
+
+                <div class="sensor-aqi">
+
+                    <div
+                        class="sensor-aqi-number"
+                        style="color:${color};"
+                    >
+                        ${aqi}
+                    </div>
+
+                    <div>
+
+                        <div
+                            style="
+                                font-weight:650;
+                                font-size:13px;
+                            "
+                        >
+                            AQI
+                        </div>
+
+                        <div class="sensor-category">
+                            ${escapeHTML(category)}
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="measurement-grid">
+
+
+                    <div class="measurement">
+
+                        <div class="measurement-label">
+                            PM2.5
+                        </div>
+
+                        <div class="measurement-value">
+                            ${pm25}
+                            <small>µg/m³</small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="measurement">
+
+                        <div class="measurement-label">
+                            PM10
+                        </div>
+
+                        <div class="measurement-value">
+                            ${pm10}
+                            <small>µg/m³</small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="measurement">
+
+                        <div class="measurement-label">
+                            Temperature
+                        </div>
+
+                        <div class="measurement-value">
+                            ${temp}°C
+                        </div>
+
+                    </div>
+
+
+                    <div class="measurement">
+
+                        <div class="measurement-label">
+                            Humidity
+                        </div>
+
+                        <div class="measurement-value">
+                            ${humidity}%
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+                <div
+                    style="
+                        margin-top:12px;
+                        font-size:11px;
+                        color:var(--muted);
+                    "
+                >
+
+                    Dominant pollutant:
+                    <strong>
+                        ${escapeHTML(pollutant)}
+                    </strong>
+
+                </div>
+
+
+                <div class="sensor-footer">
+
+                    <span>
+                        🟢 Active
+                    </span>
+
+                    <span>
+                        Updated ${updated}
+                    </span>
+
+                </div>
+
+            `;
+
+
+            grid.appendChild(card);
+
+        });
+
+    }
+
+
+
+    /* =====================================================
+       ALERTS
+    ===================================================== */
+
+    function displayAlerts(alerts) {
+
+        const section =
+            document.getElementById(
+                "alerts-section"
+            );
+
+
+        const list =
+            document.getElementById(
+                "alerts-list"
+            );
+
+
+        if (!alerts.length) {
+
+            section.style.display =
+                "none";
+
+            return;
+
+        }
+
+
+        section.style.display =
+            "block";
+
+
+        list.innerHTML = "";
+
+
+        alerts.forEach(alert => {
+
+            const severity =
+                alert.severity ||
+                "medium";
+
+
+            const item =
+                document.createElement(
+                    "div"
+                );
+
+
+            item.className =
+                `alert-item ${severity}`;
+
+
+            let icon = "⚠️";
+
+
+            if (
+                severity === "critical"
+            ) {
+
+                icon = "🚨";
+
+            }
+
+            else if (
+                severity === "high"
+            ) {
+
+                icon = "🔴";
+
+            }
+
+
+            item.innerHTML = `
+
+                <div class="alert-icon">
+                    ${icon}
+                </div>
+
+                <div class="alert-message">
+                    ${escapeHTML(
+                        alert.message ||
+                        "Air quality alert"
+                    )}
+                </div>
+
+                <div class="alert-time">
+                    Active
+                </div>
+
+            `;
+
+
+            list.appendChild(item);
+
+        });
+
+    }
+
+
+
+    /* =====================================================
+       SEARCH SENSOR
+    ===================================================== */
+
+    function filterSensors() {
+
+        const search =
+            document.getElementById(
+                "sensor-search"
+            ).value
+            .toLowerCase();
+
+
+        const cards =
+            document.querySelectorAll(
+                ".sensor-card"
+            );
+
+
+        cards.forEach(card => {
+
+            const value =
+                card.dataset.search ||
+                "";
+
+
+            card.style.display =
+                value.includes(search)
+                ? "block"
+                : "none";
+
+        });
+
+    }
+
+
+
+    /* =====================================================
+       AQI CATEGORY
+    ===================================================== */
+
+    function getAQICategory(aqi) {
+
+        if (aqi <= 50)
+            return "Good";
+
+        if (aqi <= 100)
+            return "Satisfactory";
+
+        if (aqi <= 200)
+            return "Moderate";
+
+        if (aqi <= 300)
+            return "Poor";
+
+        return "Severe";
+
+    }
+
+
+
+    /* =====================================================
+       AQI COLOR
+    ===================================================== */
+
+    function getAQIColor(aqi) {
+
+        if (aqi <= 50)
+            return "#16a34a";
+
+        if (aqi <= 100)
+            return "#ca8a04";
+
+        if (aqi <= 200)
+            return "#ea580c";
+
+        if (aqi <= 300)
+            return "#dc2626";
+
+        return "#7c3aed";
+
+    }
+
+
+
+    /* =====================================================
+       DARK MODE
+    ===================================================== */
+
+    function toggleDarkMode() {
+
+        document.body.classList.toggle(
+            "dark"
+        );
+
+
+        localStorage.setItem(
+            "darkMode",
+            document.body.classList.contains(
+                "dark"
+            )
+        );
+
+    }
+
+
+    if (
+        localStorage.getItem(
+            "darkMode"
+        ) === "true"
+    ) {
+
+        document.body.classList.add(
+            "dark"
+        );
+
+    }
+
+
+
+    /* =====================================================
+       TOAST
+    ===================================================== */
+
+    function showToastMessage(message) {
+
+        const toast =
+            document.getElementById(
+                "toast"
+            );
+
+
+        toast.textContent =
+            message;
+
+
+        toast.classList.add(
+            "show"
+        );
+
+
+        setTimeout(() => {
+
+            toast.classList.remove(
+                "show"
+            );
+
+        }, 2500);
+
+    }
+
+
+
+    /* =====================================================
+       HTML ESCAPE
+    ===================================================== */
+
+    function escapeHTML(value) {
+
+        const div =
+            document.createElement(
+                "div"
+            );
+
+
+        div.textContent =
+            value ?? "";
+
+
+        return div.innerHTML;
+
+    }
+
+
+
+    /* =====================================================
+       COUNTDOWN
+    ===================================================== */
+
+    setInterval(() => {
+
+        countdown--;
+
+
+        if (countdown <= 0) {
+
+            countdown = 15;
+
+        }
+
+
+        document.getElementById(
+            "countdown"
+        ).textContent =
+            countdown + "s";
+
+    }, 1000);
+
+
+
+    /* =====================================================
+       AUTO REFRESH
+    ===================================================== */
+
+    setInterval(() => {
+
+        loadDashboard(false);
+
+    }, 15000);
+
+
+
+    /* =====================================================
+       START
+    ===================================================== */
+
+    loadDashboard();
+
+
+</script>
+
+
+</body>
+
+</html>
+```
