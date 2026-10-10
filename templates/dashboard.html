@@ -1577,15 +1577,9 @@
 }
 
 .analytics-chart {
-    margin-top: 20px;
-    padding: 18px;
-    border: 1px solid var(--border);
-    border-radius: 14px;
-}
-
-.analytics-chart h3 {
-    font-size: 16px;
-    margin-bottom: 15px;
+    position: relative;
+    min-width: 0;
+    height: 340px;
 }
 
 .analytics-chart canvas {
@@ -1594,22 +1588,351 @@
     height: 280px !important;
 }
 
-.analytics-status {
-    margin: 12px 0;
+@media (max-width: 600px) {
+    .analytics-chart {
+        height: 290px;
+    }
+
+    .analytics-chart canvas {
+        height: 230px !important;
+    }
 }
 
+/* =====================================================
+   RESPONSIVE FIXES FOR MOBILE, TABLET AND DESKTOP
+===================================================== */
+
+html {
+    width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+}
+
+body {
+    width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+}
+
+.app,
+.main,
+#content,
+.hero,
+.aqi-panel,
+.summary-grid,
+.sensor-grid,
+.pollutant-grid {
+    min-width: 0;
+}
+
+.main {
+    max-width: 100%;
+}
+
+img,
+canvas,
+input,
+select,
+button {
+    max-width: 100%;
+}
+
+.sensor-card,
+.summary-card,
+.pollutant-card,
+.analytics-modal,
+.friendly-alert-card {
+    overflow-wrap: anywhere;
+}
+
+/* Medium screens */
+@media (min-width: 601px) and (max-width: 1100px) {
+    .hero {
+        grid-template-columns: 1fr;
+    }
+
+    .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .pollutant-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .sensor-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .main {
+        padding: 22px;
+    }
+}
+
+/* Mobile navigation and layout */
 @media (max-width: 600px) {
+    .sidebar {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: auto;
+        min-height: 64px;
+        padding: 8px 4px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-around;
+        gap: 2px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        z-index: 1000;
+    }
+
+    .brand,
+    .nav-title,
+    .sidebar-bottom,
+    .sidebar .nav-item:not(#dashboardNav):not(#sensorsNav):not(#alertsNav):not(#analyticsNav) span {
+        display: none;
+    }
+
+    .sidebar .nav-item {
+        display: flex;
+        flex: 1 0 0;
+        min-width: 0;
+        justify-content: center;
+        align-items: center;
+        margin: 0;
+        padding: 12px 3px;
+        font-size: 19px;
+        border-left: none;
+    }
+
+    .sidebar .nav-item.active {
+        border-left: none;
+        border-top: 3px solid #22c55e;
+    }
+
+    .sidebar .nav-item span {
+        display: none;
+    }
+
+    .main {
+        width: 100%;
+        margin-left: 0;
+        padding: 16px 12px 85px;
+    }
+
+    .topbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+    }
+
+    .page-title h1 {
+        font-size: 22px;
+        line-height: 1.3;
+    }
+
+    .page-title p {
+        line-height: 1.5;
+    }
+
+    .top-actions {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .live {
+        flex: 1 1 100%;
+        justify-content: center;
+    }
+
+    .action-btn {
+        min-height: 42px;
+    }
+
+    .hero {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 14px;
+    }
+
+    .aqi-panel {
+        padding: 20px 16px;
+    }
+
+    .aqi-content {
+        gap: 16px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .aqi-number {
+        font-size: clamp(48px, 15vw, 70px);
+    }
+
+    .aqi-info h2 {
+        font-size: 19px;
+    }
+
+    .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .summary-card {
+        padding: 14px;
+    }
+
+    .summary-value {
+        font-size: 22px;
+    }
+
+    .pollutant-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .pollutant-card {
+        padding: 14px 11px;
+    }
+
+    .pollutant-header {
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .pollutant-value {
+        font-size: 18px;
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .sensor-tools,
+    .sensor-tools .search {
+        width: 100%;
+    }
+
+    .sensor-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+    }
+
+    .alert-panel {
+        padding: 12px;
+    }
+
+    .alert-item {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .alert-time {
+        margin-left: 0;
+    }
+
+    .alert-summary-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .alert-filter-panel {
+        flex-direction: column;
+    }
+
+    .alert-filter-panel .search,
+    .alert-filter-panel select {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .friendly-alert-card {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 15px;
+    }
+
+    .friendly-alert-right {
+        text-align: left;
+        min-width: 0;
+    }
+
     .analytics-overlay {
         padding: 8px;
     }
 
     .analytics-modal {
-        padding: 15px;
-        max-height: 95vh;
+        width: 100%;
+        max-height: 92vh;
+        padding: 14px;
+    }
+
+    .analytics-header h2 {
+        font-size: 19px;
+    }
+
+    .analytics-controls {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .analytics-controls select,
+    .analytics-controls button {
+        width: 100%;
+        min-height: 42px;
     }
 
     .analytics-stats {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .analytics-chart {
+        padding: 10px;
+        overflow: hidden;
+    }
+
+    .analytics-chart canvas {
+        max-width: 100%;
+    }
+
+    .toast {
+        left: 12px;
+        right: 12px;
+        bottom: 78px;
+        text-align: center;
+    }
+}
+
+/* Very small phones */
+@media (max-width: 360px) {
+    .main {
+        padding-left: 9px;
+        padding-right: 9px;
+    }
+
+    .summary-grid,
+    .pollutant-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .aqi-content {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
     }
 }
 
@@ -1783,6 +2106,192 @@
     }
 }
 
+/* ===== Premium Friendly Alert Design ===== */
+
+.friendly-alert-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 22px;
+    margin-bottom: 16px;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-left: 5px solid #f59e0b;
+    border-radius: 16px;
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);
+    transition: transform 0.25s ease,
+                box-shadow 0.25s ease;
+}
+
+.friendly-alert-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+}
+
+.friendly-alert-card.critical {
+    border-left-color: #dc2626;
+}
+
+.friendly-alert-card.high {
+    border-left-color: #f97316;
+}
+
+.friendly-alert-card.medium {
+    border-left-color: #eab308;
+}
+
+.friendly-alert-card.low,
+.friendly-alert-card.normal {
+    border-left-color: #16a34a;
+}
+
+.friendly-alert-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    flex: 1;
+    min-width: 0;
+}
+
+.friendly-alert-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 25px;
+    border-radius: 14px;
+    background: #fff7ed;
+}
+
+.friendly-alert-card.critical .friendly-alert-icon {
+    background: #fee2e2;
+}
+
+.friendly-alert-card.high .friendly-alert-icon {
+    background: #ffedd5;
+}
+
+.friendly-alert-card.low .friendly-alert-icon,
+.friendly-alert-card.normal .friendly-alert-icon {
+    background: #dcfce7;
+}
+
+.friendly-alert-message {
+    font-size: 14px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.friendly-alert-message strong {
+    display: block;
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.friendly-alert-message p {
+    margin: 0;
+    color: var(--muted);
+}
+
+.friendly-alert-aqi {
+    font-size: 27px;
+    font-weight: 800;
+    margin: 8px 0;
+    line-height: 1.2;
+}
+
+.friendly-alert-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.friendly-alert-badge {
+    display: inline-block;
+    padding: 7px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 750;
+    background: #ffedd5;
+    color: #9a3412;
+    white-space: nowrap;
+}
+
+.friendly-alert-badge.critical {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.friendly-alert-badge.high {
+    background: #ffedd5;
+    color: #9a3412;
+}
+
+.friendly-alert-badge.medium {
+    background: #fef9c3;
+    color: #854d0e;
+}
+
+.friendly-alert-badge.low,
+.friendly-alert-badge.normal {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.friendly-alert-time {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.alert-empty-state {
+    padding: 40px 20px;
+    text-align: center;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px dashed var(--border);
+    border-radius: 18px;
+}
+
+.alert-empty-state .empty-icon {
+    font-size: 44px;
+    margin-bottom: 12px;
+}
+
+.alert-empty-state p {
+    color: var(--muted);
+    margin-top: 8px;
+    font-size: 13px;
+}
+
+@media (max-width: 650px) {
+    .friendly-alert-card {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 16px;
+    }
+
+    .friendly-alert-left {
+        width: 100%;
+    }
+
+    .friendly-alert-right {
+        align-items: flex-start;
+        text-align: left;
+        padding-left: 62px;
+    }
+
+    .friendly-alert-aqi {
+        font-size: 23px;
+    }
+}
+
+
 
     </style>
 
@@ -1887,12 +2396,7 @@
 
 
 
-        <div class="nav-item">
-            🗺️
-            <span>
-                Locations
-            </span>
-        </div>
+        
 
 
         <div class="sidebar-bottom">
@@ -2505,6 +3009,7 @@
             <option value="all">All alert levels</option>
             <option value="critical">Critical</option>
             <option value="high">High</option>
+            <option value="normal">Normal</option>
         </select>
     </div>
 
@@ -2759,7 +3264,9 @@ async function loadAnalytics() {
 
         const format = value => value === null ? "--" : value.toFixed(1);
 
-        const aqiValues = aqiHistory.map(item => Number(item.aqi));
+        const aqiValues = aqiHistory
+    .map(item => Number(item.aqi))
+    .filter(value => Number.isFinite(value));
         const avg = average(aqiValues);
 
         document.getElementById("analyticsAvg").textContent = format(avg);
@@ -3425,99 +3932,80 @@ async function loadAnalytics() {
        ALERTS
     ===================================================== */
 
-    function displayAlerts(alerts) {
+   
+function displayAlerts(alerts) {
+    const section = document.getElementById("alerts-section");
+    const list = document.getElementById("alerts-list");
 
-        const section =
-            document.getElementById(
-                "alerts-section"
-            );
+    if (!section || !list) return;
 
+    if (!alerts || alerts.length === 0) {
+        section.style.display = "none";
+        return;
+    }
 
-        const list =
-            document.getElementById(
-                "alerts-list"
-            );
+    section.style.display = "block";
+    list.innerHTML = "";
 
+    alerts.forEach(alert => {
+        const severity = (
+            alert.severity || "medium"
+        ).toLowerCase();
 
-        if (!alerts.length) {
+        let icon = "⚠️";
+        let label = "Moderate";
+        let colorClass = "medium";
 
-            section.style.display =
-                "none";
-
-            return;
-
+        if (severity === "critical") {
+            icon = "🚨";
+            label = "Critical";
+            colorClass = "critical";
+        } else if (severity === "high") {
+            icon = "🔴";
+            label = "High";
+            colorClass = "high";
+        } else if (
+            severity === "low" ||
+            severity === "normal"
+        ) {
+            icon = "🟢";
+            label = "Normal";
+            colorClass = "low";
         }
 
+        const item = document.createElement("div");
+        item.className = `alert-item ${colorClass}`;
 
-        section.style.display =
-            "block";
+        const message = escapeHTML(
+            alert.message || "Air quality alert"
+        );
 
+        const aqi = alert.aqi ?? alert.AQI;
 
-        list.innerHTML = "";
+        item.innerHTML = `
+            <div class="alert-icon">${icon}</div>
 
+            <div class="alert-message">
+                <strong>${label} Air Quality Alert</strong>
+                <p>${message}</p>
+                ${
+                    aqi !== undefined && aqi !== null
+                    ? `<span class="alert-aqi">AQI: ${escapeHTML(String(aqi))}</span>`
+                    : ""
+                }
+            </div>
 
-        alerts.forEach(alert => {
+            <div class="alert-details">
+                <span class="alert-severity-badge ${colorClass}">
+                    ${label}
+                </span>
+                <div class="alert-time">● Active</div>
+            </div>
+        `;
 
-            const severity =
-                alert.severity ||
-                "medium";
-
-
-            const item =
-                document.createElement(
-                    "div"
-                );
-
-
-            item.className =
-                `alert-item ${severity}`;
-
-
-            let icon = "⚠️";
-
-
-            if (
-                severity === "critical"
-            ) {
-
-                icon = "🚨";
-
-            }
-
-            else if (
-                severity === "high"
-            ) {
-
-                icon = "🔴";
-
-            }
-
-
-            item.innerHTML = `
-
-                <div class="alert-icon">
-                    ${icon}
-                </div>
-
-                <div class="alert-message">
-                    ${escapeHTML(
-                        alert.message ||
-                        "Air quality alert"
-                    )}
-                </div>
-
-                <div class="alert-time">
-                    Active
-                </div>
-
-            `;
-
-
-            list.appendChild(item);
-
-        });
-
-    }
+        list.appendChild(item);
+    });
+}
 
 
 
@@ -3738,6 +4226,29 @@ async function loadAnalytics() {
     ===================================================== */
     
 /* =====================================================
+   SIDEBAR ALERTS NAVIGATION
+===================================================== */
+
+function goToAlerts() {
+    const section = document.getElementById("alerts-history-section");
+
+    if (!section) return;
+
+    document.querySelectorAll(".sidebar .nav-item")
+        .forEach(item => item.classList.remove("active"));
+
+    document.getElementById("alertsNav").classList.add("active");
+
+    section.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+
+    loadAlertHistory();
+}
+
+    
+/* =====================================================
    SIDEBAR SENSOR NAVIGATION
 ===================================================== */
 
@@ -3795,6 +4306,103 @@ function goToDashboard() {
 }
 
 
+/* Safely display text received from the API */
+function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, function (char) {
+        const entities = {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        };
+
+        return entities[char];
+    });
+}
+
+/* Render saved AQI history and apply filters */
+function renderAlertHistory() {
+    const list = document.getElementById("alertHistoryList");
+    const status = document.getElementById("alertHistoryStatus");
+
+    if (!list) {
+        console.error("alertHistoryList element not found.");
+        return;
+    }
+
+    const sensorFilter =
+        document.getElementById("alertSensorFilter")?.value || "all";
+
+    const levelFilter =
+        document.getElementById("alertSeverityfilter")?.value || "all";
+
+    const alerts = Array.isArray(historicalAlerts)
+        ? historicalAlerts
+        : [];
+
+    const filteredAlerts = alerts.filter(alert => {
+        const sensorMatches =
+            sensorFilter === "all" || alert.node_id === sensorFilter;
+
+        const severity = String(alert.severity || "normal").toLowerCase();
+
+        const levelMatches =
+            levelFilter === "all" || severity === levelFilter.toLowerCase();
+
+        return sensorMatches && levelMatches;
+    });
+
+    if (filteredAlerts.length === 0) {
+        list.innerHTML = `
+            <div class="alert-empty-state">
+                <div class="empty-icon">📋</div>
+                <h3>No matching AQI records</h3>
+                <p>Try selecting a different sensor or alert level.</p>
+            </div>
+        `;
+
+        if (status) {
+            status.textContent = "No records match the selected filters.";
+        }
+        return;
+    }
+
+    list.innerHTML = filteredAlerts.map(alert => {
+        const severity = String(alert.severity || "normal").toLowerCase();
+        const aqi = Number(alert.aqi);
+        const safeAqi = Number.isFinite(aqi) ? aqi.toFixed(1) : "N/A";
+
+        const timestamp = alert.timestamp
+            ? new Date(alert.timestamp).toLocaleString()
+            : "Time unavailable";
+
+        return `
+            <div class="alert-item">
+                <div class="alert-content">
+                    <strong>${escapeHtml(alert.sensor_name || "Unknown sensor")}</strong>
+                    <p>${escapeHtml(alert.message || "AQI record")}</p>
+                    <small>
+                        AQI: ${safeAqi}
+                        &bull; ${escapeHtml(alert.category || "Unknown")}
+                        &bull; Pollutant: ${escapeHtml(alert.dominant_pollutant || "N/A")}
+                    </small>
+                    <small>${escapeHtml(timestamp)}</small>
+                </div>
+                <span class="alert-severity severity-${escapeHtml(severity)}">
+                    ${escapeHtml(severity.toUpperCase())}
+                </span>
+            </div>
+        `;
+    }).join("");
+
+    if (status) {
+        status.textContent =
+            `Showing ${filteredAlerts.length} of ${alerts.length} AQI records.`;
+    }
+}
+
+
 /* =====================================================
    HISTORICAL ALERTS
 ===================================================== */
@@ -3804,203 +4412,137 @@ let historicalAlerts = [];
 async function loadAlertHistory() {
     const status = document.getElementById("alertHistoryStatus");
     const list = document.getElementById("alertHistoryList");
+    const total = document.getElementById("alertTotal");
+    const critical = document.getElementById("alertCritical");
+    const high = document.getElementById("alertHigh");
+    const select = document.getElementById("alertSensorFilter");
+
+    if (!status || !list) {
+        console.error(
+            "Missing HTML element: alertHistoryStatus or alertHistoryList"
+        );
+        return;
+    }
 
     status.textContent = "Loading saved alert history...";
     list.innerHTML = "";
 
     try {
-        const response = await fetch("/api/alerts/history");
+        const response = await fetch("/api/alerts/history", {
+            method: "GET",
+            headers: { "Accept": "application/json" },
+            cache: "no-store"
+        });
+
         const data = await response.json();
 
-        if (!response.ok || !data.success) {
-            throw new Error(data.error || "Unable to load alert history.");
+        if (!response.ok) {
+            throw new Error(
+                data.error || `HTTP error: ${response.status}`
+            );
         }
 
-        historicalAlerts = data.alerts || [];
+        if (data.success === false) {
+            throw new Error(
+                data.error || "The API reported a failure."
+            );
+        }
 
-        document.getElementById("alertTotal").textContent =
-            historicalAlerts.length;
+        if (!Array.isArray(data.alerts)) {
+            throw new Error("API response does not contain an alerts array.");
+        }
 
-        document.getElementById("alertCritical").textContent =
-            historicalAlerts.filter(a => a.severity === "critical").length;
+        historicalAlerts = data.alerts;
 
-        document.getElementById("alertHigh").textContent =
-            historicalAlerts.filter(a => a.severity === "high").length;
+        if (total) total.textContent = historicalAlerts.length;
 
-        const select = document.getElementById("alertSensorFilter");
-        const previousValue = select.value || "all";
-        const sensorNames = new Map();
+        if (critical) {
+            critical.textContent = historicalAlerts.filter(
+                a => a.severity === "critical"
+            ).length;
+        }
 
-        historicalAlerts.forEach(alert => {
-            sensorNames.set(alert.node_id, alert.sensor_name);
-        });
+        if (high) {
+            high.textContent = historicalAlerts.filter(
+                a => a.severity === "high"
+            ).length;
+        }
 
-        select.innerHTML = '<option value="all">All sensors</option>';
+        if (select) {
+            const previousValue = select.value || "all";
+            const sensorNames = new Map();
 
-        sensorNames.forEach((name, id) => {
-            const option = document.createElement("option");
-            option.value = id;
-            option.textContent = name;
-            select.appendChild(option);
-        });
+            historicalAlerts.forEach(alert => {
+                if (alert.node_id) {
+                    sensorNames.set(
+                        alert.node_id,
+                        alert.sensor_name || alert.node_id
+                    );
+                }
+            });
 
-        select.value = sensorNames.has(previousValue)
-            ? previousValue
-            : "all";
+            select.innerHTML =
+                '<option value="all">All sensors</option>';
+
+            sensorNames.forEach((name, id) => {
+                const option = document.createElement("option");
+                option.value = id;
+                option.textContent = name;
+                select.appendChild(option);
+            });
+
+            select.value = sensorNames.has(previousValue)
+                ? previousValue
+                : "all";
+        }
+
+        status.textContent = historicalAlerts.length
+            ? `Loaded ${historicalAlerts.length} alert records successfully.`
+            : "No saved alert history is available.";
 
         renderAlertHistory();
 
     } catch (error) {
         console.error("Alert history error:", error);
 
-        status.textContent = "We couldn't load the alert history.";
+        status.textContent = "Unable to load alert history.";
 
         list.innerHTML = `
             <div class="alert-empty-state">
                 <div class="empty-icon">📡</div>
                 <h3>Unable to load alerts</h3>
-                <p>Check that Flask is running and the API endpoint exists.</p>
+                <p>${escapeHtml(error.message || "Unknown error")}</p>
             </div>
         `;
     }
 }
 
-/* AUTOMATIC ALERT HISTORY REFRESH */
+
+/* =====================================================
+   AUTOMATIC ALERT HISTORY REFRESH
+===================================================== */
 
 let alertRefreshTimer = null;
 
 function startAlertAutoRefresh() {
-    // Prevent multiple refresh timers.
     if (alertRefreshTimer !== null) {
         clearInterval(alertRefreshTimer);
     }
 
-    // Refresh saved AQI records every 30 seconds.
+    // Load saved alert history immediately.
+    loadAlertHistory();
+
+    // Refresh every 30 seconds.
     alertRefreshTimer = setInterval(() => {
         loadAlertHistory();
     }, 30000);
 }
 
-// Start automatic refresh when the page loads.
 startAlertAutoRefresh();
 
-
-function renderAlertHistory() {
-    const list = document.getElementById("alertHistoryList");
-    const status = document.getElementById("alertHistoryStatus");
-
-    const sensorFilter =
-        document.getElementById("alertSensorFilter").value;
-
-    const severityFilter =
-        document.getElementById("alertSeverityFilter").value;
-
-    const search =
-        document.getElementById("alertSearch").value.trim().toLowerCase();
-
-    // Filter records using their actual AQI values.
-    const filtered = historicalAlerts.filter(alert => {
-        const aqi = Number(alert.aqi);
-
-        const severity = !Number.isFinite(aqi)
-            ? "normal"
-            : aqi > 300
-            ? "critical"
-            : aqi > 200
-            ? "high"
-            : "normal";
-
-        const matchesSensor =
-            sensorFilter === "all" || alert.node_id === sensorFilter;
-
-        const matchesSeverity =
-            severityFilter === "all" || severity === severityFilter;
-
-        const matchesSearch =
-            (alert.sensor_name || "").toLowerCase().includes(search) ||
-            (alert.node_id || "").toLowerCase().includes(search);
-
-        return matchesSensor && matchesSeverity && matchesSearch;
-    });
-
-    list.innerHTML = "";
-
-    if (!filtered.length) {
-        status.textContent = "No matching AQI records.";
-
-        list.innerHTML = `
-            <div class="alert-empty-state">
-                <div class="empty-icon">🌿</div>
-                <h3>No matching records</h3>
-                <p>Try selecting another sensor or alert level.</p>
-            </div>
-        `;
-        return;
-    }
-
-    status.textContent =
-        `Showing ${filtered.length} AQI record${filtered.length === 1 ? "" : "s"}.`;
-
-    filtered.forEach(alert => {
-        const aqi = Number(alert.aqi);
-
-        const severity = !Number.isFinite(aqi)
-            ? "normal"
-            : aqi > 300
-            ? "critical"
-            : aqi > 200
-            ? "high"
-            : "normal";
-
-        const date = new Date(alert.timestamp);
-
-        const formattedDate = !alert.timestamp ||
-            Number.isNaN(date.getTime())
-            ? alert.timestamp || "Unknown time"
-            : date.toLocaleString();
-
-        const aqiText = Number.isFinite(aqi)
-            ? aqi.toFixed(0)
-            : "--";
-
-        const message = severity === "critical"
-            ? "Very high pollution detected. Please review this location."
-            : severity === "high"
-            ? "Elevated pollution detected. Please monitor this location."
-            : "No high-AQI alert for this saved reading.";
-
-        const badgeText = severity === "critical"
-            ? "🚨 CRITICAL"
-            : severity === "high"
-            ? "⚠️ HIGH"
-            : "✅ NORMAL";
-
-        const card = document.createElement("article");
-        card.className = `friendly-alert-card ${severity}`;
-
-        card.innerHTML = `
-            <div class="friendly-alert-info">
-                <h3>📍 ${escapeHTML(alert.sensor_name || "Unknown sensor")}</h3>
-                <p>${escapeHTML(message)}</p>
-                <p>🕒 ${escapeHTML(formattedDate)}</p>
-                <p>Sensor ID: ${escapeHTML(alert.node_id || "N/A")}</p>
-                <p>Category: ${escapeHTML(alert.category || "Unknown")}</p>
-            </div>
-
-            <div class="friendly-alert-right">
-                <span class="friendly-alert-badge ${severity}">
-                    ${badgeText}
-                </span>
-                <div class="friendly-alert-aqi">${aqiText}</div>
-                <small>AQI</small>
-            </div>
-        `;
-
-        list.appendChild(card);
-    });
-}
-
     loadDashboard();
+
+    
 
 
 </script>
