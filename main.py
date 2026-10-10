@@ -1,8 +1,3 @@
-"""
-Main execution file for Air Quality Monitoring System
-This file orchestrates data collection, AQI calculation, and display
-"""
-
 from backend.data_collection import SensorDataCollector
 from backend.database_models import DatabaseManager
 from backend.aqi_calculation import AQICalculator

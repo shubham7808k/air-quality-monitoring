@@ -1470,6 +1470,319 @@
             }
 
         }
+        
+/* ANALYTICS POPUP */
+
+.analytics-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(2, 6, 23, 0.75);
+    backdrop-filter: blur(5px);
+}
+
+.analytics-modal {
+    width: min(1100px, 100%);
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 25px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.analytics-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 22px;
+}
+
+.analytics-header h2 {
+    font-size: 23px;
+    margin-bottom: 6px;
+}
+
+.analytics-header p,
+.analytics-status {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.analytics-close {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--background);
+    color: var(--text);
+    font-size: 26px;
+    cursor: pointer;
+}
+
+.analytics-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.analytics-controls select,
+.analytics-controls button {
+    padding: 10px 13px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+}
+
+.analytics-controls button {
+    background: var(--primary);
+    color: white;
+}
+
+.analytics-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin: 20px 0;
+}
+
+.analytics-stat {
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--background);
+}
+
+.analytics-stat span {
+    display: block;
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 10px;
+}
+
+.analytics-stat strong {
+    font-size: 27px;
+    color: var(--primary);
+}
+
+.analytics-chart {
+    margin-top: 20px;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+}
+
+.analytics-chart h3 {
+    font-size: 16px;
+    margin-bottom: 15px;
+}
+
+.analytics-chart canvas {
+    display: block;
+    width: 100% !important;
+    height: 280px !important;
+}
+
+.analytics-status {
+    margin: 12px 0;
+}
+
+@media (max-width: 600px) {
+    .analytics-overlay {
+        padding: 8px;
+    }
+
+    .analytics-modal {
+        padding: 15px;
+        max-height: 95vh;
+    }
+
+    .analytics-stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* HISTORICAL ALERT CENTER */
+
+#alerts-history-section {
+    margin-top: 35px;
+    scroll-margin-top: 25px;
+}
+
+.alert-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.alert-summary-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 20px;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+}
+
+.alert-summary-card > span {
+    font-size: 27px;
+}
+
+.alert-summary-card p {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 5px;
+}
+
+.alert-summary-card h3 {
+    font-size: 25px;
+}
+
+.alert-filter-panel {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 16px;
+    margin-bottom: 15px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+}
+
+.alert-filter-panel select {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--text);
+}
+
+.alert-friendly-status {
+    margin: 15px 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.friendly-alert-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+    margin-bottom: 13px;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-left: 5px solid #ea580c;
+    border-radius: 15px;
+    box-shadow: var(--shadow);
+}
+
+.friendly-alert-card.critical {
+    border-left-color: #dc2626;
+}
+
+.friendly-alert-card.high {
+    border-left-color: #ea580c;
+}
+
+.friendly-alert-info h3 {
+    font-size: 15px;
+    margin-bottom: 7px;
+}
+
+.friendly-alert-info p {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 5px;
+}
+
+.friendly-alert-right {
+    text-align: right;
+    min-width: 110px;
+}
+
+.friendly-alert-aqi {
+    font-size: 26px;
+    font-weight: 800;
+    margin: 8px 0;
+}
+
+.friendly-alert-badge {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 750;
+    background: #ffedd5;
+    color: #9a3412;
+}
+
+.friendly-alert-badge.critical {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.alert-empty-state {
+    padding: 35px 20px;
+    text-align: center;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 15px;
+}
+
+.alert-empty-state .empty-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+}
+
+.alert-empty-state p {
+    color: var(--muted);
+    margin-top: 8px;
+    font-size: 13px;
+}
+
+@media (max-width: 650px) {
+    .alert-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .alert-filter-panel {
+        flex-direction: column;
+    }
+
+    .alert-filter-panel .search,
+    .alert-filter-panel select {
+        width: 100%;
+    }
+
+    .friendly-alert-card {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .friendly-alert-right {
+        text-align: left;
+    }
+}
+
 
     </style>
 
@@ -1515,36 +1828,63 @@
         </div>
 
 
-        <div class="nav-item active">
-            📊
-            <span>
-                Dashboard
-            </span>
-        </div>
+        
+<div
+    class="nav-item active"
+    id="dashboardNav"
+    onclick="goToDashboard()"
+    role="button"
+    tabindex="0"
+    onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); goToDashboard(); }"
+>
+    📊
+    <span>Dashboard</span>
+</div>
 
 
-        <div class="nav-item">
-            📡
-            <span>
-                Sensors
-            </span>
-        </div>
+        
+<div
+    class="nav-item"
+    id="sensorsNav"
+    onclick="goToSensors()"
+    role="button"
+    tabindex="0"
+    onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); goToSensors(); }"
+>
+    📡
+    <span>Sensors</span>
+</div>
 
 
-        <div class="nav-item">
-            ⚠️
-            <span>
-                Alerts
-            </span>
-        </div>
+
+        
+<div
+    class="nav-item"
+    id="alertsNav"
+    onclick="goToAlerts()"
+    role="button"
+    tabindex="0"
+    onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); goToAlerts(); }"
+>
+    ⚠️
+    <span>Alerts</span>
+</div>
 
 
-        <div class="nav-item">
-            📈
-            <span>
-                Analytics
-            </span>
-        </div>
+
+        
+<div
+    class="nav-item"
+    id="analyticsNav"
+    onclick="openAnalytics()"
+    role="button"
+    tabindex="0"
+    onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openAnalytics(); }"
+>
+    📈
+    <span>Analytics</span>
+</div>
+
 
 
         <div class="nav-item">
@@ -2104,6 +2444,78 @@
                 class="sensor-grid"
                 id="sensors-grid"
             ></div>
+            
+<!-- HISTORICAL ALERT CENTER -->
+<section id="alerts-history-section">
+
+    <div class="section-header">
+        <div>
+            <h2>🔔 Air Quality Alert Center</h2>
+            <p>View saved AQI history for each sensor and identify high-pollution events.</p>
+        </div>
+
+        <button
+            class="action-btn refresh-btn"
+            onclick="loadAlertHistory()"
+        >
+            ↻ Refresh Alerts
+        </button>
+    </div>
+
+    <div class="alert-summary-grid">
+        <div class="alert-summary-card">
+            <span>📋</span>
+            <div>
+                <p>AQI Records</p>
+                <h3 id="alertTotal">0</h3>
+            </div>
+        </div>
+
+        <div class="alert-summary-card">
+            <span>🚨</span>
+            <div>
+                <p>Critical</p>
+                <h3 id="alertCritical">0</h3>
+            </div>
+        </div>
+
+        <div class="alert-summary-card">
+            <span>⚠️</span>
+            <div>
+                <p>High</p>
+                <h3 id="alertHigh">0</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert-filter-panel">
+        <input
+            class="search"
+            id="alertSearch"
+            type="search"
+            placeholder="Search by sensor name..."
+            oninput="renderAlertHistory()"
+        >
+
+        <select id="alertSensorFilter" onchange="renderAlertHistory()">
+            <option value="all">All sensors</option>
+        </select>
+
+        <select id="alertSeverityFilter" onchange="renderAlertHistory()">
+            <option value="all">All alert levels</option>
+            <option value="critical">Critical</option>
+            <option value="high">High</option>
+        </select>
+    </div>
+
+    <p id="alertHistoryStatus" class="alert-friendly-status">
+        Open Alerts to load saved alert history.
+    </p>
+
+    <div id="alertHistoryList"></div>
+
+</section>
+
 
 
         </div>
@@ -2145,6 +2557,81 @@
     Dashboard refreshed
 </div>
 
+<!-- ANALYTICS POPUP -->
+<div
+    id="analyticsModal"
+    class="analytics-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="analyticsTitle"
+>
+    <div class="analytics-modal">
+
+        <div class="analytics-header">
+            <div>
+                <h2 id="analyticsTitle">📈 Air Quality Analytics</h2>
+                <p>Historical sensor readings and pollution trends</p>
+            </div>
+
+            <button
+                type="button"
+                class="analytics-close"
+                onclick="closeAnalytics()"
+                aria-label="Close analytics"
+            >&times;</button>
+        </div>
+
+        <div class="analytics-controls">
+            <label for="analyticsSensor">Select sensor:</label>
+
+            <select id="analyticsSensor">
+                <option value="">Select a sensor</option>
+            </select>
+
+            <button type="button" onclick="loadAnalytics()">
+                🔄 Refresh Graphs
+            </button>
+        </div>
+
+        <p
+            id="analyticsStatus"
+            class="analytics-status"
+            role="status"
+        >Select a sensor to load historical data.</p>
+
+        <div class="analytics-stats">
+            <div class="analytics-stat">
+                <span>Average Historical AQI</span>
+                <strong id="analyticsAvg">--</strong>
+            </div>
+
+            <div class="analytics-stat">
+                <span>Maximum Historical AQI</span>
+                <strong id="analyticsMax">--</strong>
+            </div>
+
+            <div class="analytics-stat">
+                <span>Historical Records</span>
+                <strong id="analyticsCount">0</strong>
+            </div>
+        </div>
+
+        <div class="analytics-chart">
+            <h3>Historical AQI Trend</h3>
+            <canvas id="analyticsAqiChart"></canvas>
+        </div>
+
+        <div class="analytics-chart">
+            <h3>Historical Pollutant Comparison</h3>
+            <canvas id="analyticsPollutantChart"></canvas>
+        </div>
+
+    </div>
+</div>
+
+<!-- Chart.js library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 
 
 <script>
@@ -2157,6 +2644,217 @@
     let dashboardData = null;
 
     let countdown = 15;
+
+    
+/* =====================================================
+   ANALYTICS POPUP
+===================================================== */
+
+let analyticsAqiChart = null;
+let analyticsPollutantChart = null;
+
+function openAnalytics() {
+    document.getElementById("analyticsModal").style.display = "flex";
+    document.body.style.overflow = "hidden";
+
+    const select = document.getElementById("analyticsSensor");
+    const previousSelection = select.value;
+
+    // Populate the selector from actual dashboard sensors.
+    const sensors = dashboardData?.sensors || [];
+
+    select.innerHTML = '<option value="">Select a sensor</option>';
+
+    sensors.forEach(sensor => {
+        const id = sensor.node_id || sensor.id;
+        console.log("Analytics sensor:", sensor.name, "ID:", id);
+
+        if (!id) return;
+
+        const option = document.createElement("option");
+        option.value = id;
+        option.textContent = sensor.name || id;
+
+        select.appendChild(option);
+    });
+
+    if (
+        previousSelection &&
+        [...select.options].some(option => option.value === previousSelection)
+    ) {
+        select.value = previousSelection;
+    }
+
+    if (select.value) {
+        loadAnalytics();
+    } else {
+        document.getElementById("analyticsStatus").textContent =
+            sensors.length
+                ? "Select a sensor to view its historical data."
+                : "No sensor information is available in the dashboard.";
+    }
+}
+
+function closeAnalytics() {
+    document.getElementById("analyticsModal").style.display = "none";
+    document.body.style.overflow = "";
+}
+
+document.getElementById("analyticsModal").addEventListener("click", event => {
+    if (event.target.id === "analyticsModal") {
+        closeAnalytics();
+    }
+});
+
+document.addEventListener("keydown", event => {
+    if (
+        event.key === "Escape" &&
+        document.getElementById("analyticsModal").style.display === "flex"
+    ) {
+        closeAnalytics();
+    }
+});
+
+document.getElementById("analyticsSensor").addEventListener("change", () => {
+    loadAnalytics();
+});
+
+async function loadAnalytics() {
+    const sensorId = document.getElementById("analyticsSensor").value;
+    const status = document.getElementById("analyticsStatus");
+
+    if (!sensorId) {
+        status.textContent = "Please select a sensor first.";
+        return;
+    }
+
+    status.textContent = "Loading historical data...";
+
+    try {
+        // This endpoint must be implemented in flask_app.py.
+        const response = await fetch(
+            `/api/analytics?node_id=${encodeURIComponent(sensorId)}`
+        );
+
+        if (!response.ok) {
+            throw new Error(`Analytics API returned HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error(data.error || "Could not load historical data.");
+        }
+
+        const aqiHistory = data.aqi_history || [];
+        const readings = data.readings || [];
+
+        const average = values => values.length
+            ? values.reduce((sum, value) => sum + value, 0) / values.length
+            : null;
+
+        const maximum = values => values.length
+            ? Math.max(...values)
+            : null;
+
+        const format = value => value === null ? "--" : value.toFixed(1);
+
+        const aqiValues = aqiHistory.map(item => Number(item.aqi));
+        const avg = average(aqiValues);
+
+        document.getElementById("analyticsAvg").textContent = format(avg);
+        document.getElementById("analyticsMax").textContent =
+            format(maximum(aqiValues));
+        document.getElementById("analyticsCount").textContent =
+            aqiHistory.length;
+
+        if (analyticsAqiChart) analyticsAqiChart.destroy();
+        if (analyticsPollutantChart) analyticsPollutantChart.destroy();
+
+        analyticsAqiChart = new Chart(
+            document.getElementById("analyticsAqiChart"),
+            {
+                type: "line",
+                data: {
+                    labels: aqiHistory.map(item =>
+                        new Date(item.timestamp).toLocaleString()
+                    ),
+                    datasets: [{
+                        label: "AQI",
+                        data: aqiValues,
+                        borderColor: "#2563eb",
+                        backgroundColor: "rgba(37, 99, 235, 0.12)",
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: "AQI" }
+                        }
+                    }
+                }
+            }
+        );
+
+        analyticsPollutantChart = new Chart(
+            document.getElementById("analyticsPollutantChart"),
+            {
+                type: "line",
+                data: {
+                    labels: readings.map(item =>
+                        new Date(item.timestamp).toLocaleString()
+                    ),
+                    datasets: [
+                        {
+                            label: "PM2.5 (µg/m³)",
+                            data: readings.map(item => Number(item.pm25)),
+                            borderColor: "#dc2626",
+                            tension: 0.3
+                        },
+                        {
+                            label: "PM10 (µg/m³)",
+                            data: readings.map(item => Number(item.pm10)),
+                            borderColor: "#d97706",
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: "Concentration (µg/m³)"
+                            }
+                        }
+                    }
+                }
+            }
+        );
+
+        status.textContent =
+            `Loaded ${aqiHistory.length} AQI records and ` +
+            `${readings.length} sensor readings.`;
+
+        if (!aqiHistory.length && !readings.length) {
+            status.textContent =
+                "No historical records found for this sensor.";
+        }
+
+    } catch (error) {
+        console.error("Analytics loading error:", error);
+        status.textContent =
+            error.message + " Check your Flask API and database.";
+    }
+}
 
 
 
@@ -3038,14 +3736,273 @@
     /* =====================================================
        START
     ===================================================== */
+    
+/* =====================================================
+   SIDEBAR SENSOR NAVIGATION
+===================================================== */
+
+function goToSensors() {
+    const content = document.getElementById("content");
+    const sensorSection = document.getElementById("sensors-grid");
+
+    // Make sure the dashboard has finished loading.
+    if (!dashboardData || !content || !sensorSection) {
+        showToastMessage("Please wait while sensor data loads.");
+        return;
+    }
+
+    // Display the dashboard content.
+    content.style.display = "block";
+
+    // Scroll to the sensor monitoring section.
+    sensorSection.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+
+    // Highlight the Sensors sidebar item.
+    document.querySelectorAll(".sidebar .nav-item").forEach(item => {
+        item.classList.remove("active");
+    });
+
+    document.getElementById("sensorsNav").classList.add("active");
+}
+
+
+/* =====================================================
+   SIDEBAR DASHBOARD NAVIGATION
+===================================================== */
+
+function goToDashboard() {
+    // Show the dashboard content.
+    document.getElementById("content").style.display = "block";
+
+    // Scroll to the top of the dashboard.
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+
+    // Highlight Dashboard in the sidebar.
+    document.querySelectorAll(".sidebar .nav-item").forEach(item => {
+        item.classList.remove("active");
+    });
+
+    document.getElementById("dashboardNav").classList.add("active");
+
+    // Refresh the dashboard data.
+    loadDashboard(false);
+}
+
+
+/* =====================================================
+   HISTORICAL ALERTS
+===================================================== */
+
+let historicalAlerts = [];
+
+async function loadAlertHistory() {
+    const status = document.getElementById("alertHistoryStatus");
+    const list = document.getElementById("alertHistoryList");
+
+    status.textContent = "Loading saved alert history...";
+    list.innerHTML = "";
+
+    try {
+        const response = await fetch("/api/alerts/history");
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || "Unable to load alert history.");
+        }
+
+        historicalAlerts = data.alerts || [];
+
+        document.getElementById("alertTotal").textContent =
+            historicalAlerts.length;
+
+        document.getElementById("alertCritical").textContent =
+            historicalAlerts.filter(a => a.severity === "critical").length;
+
+        document.getElementById("alertHigh").textContent =
+            historicalAlerts.filter(a => a.severity === "high").length;
+
+        const select = document.getElementById("alertSensorFilter");
+        const previousValue = select.value || "all";
+        const sensorNames = new Map();
+
+        historicalAlerts.forEach(alert => {
+            sensorNames.set(alert.node_id, alert.sensor_name);
+        });
+
+        select.innerHTML = '<option value="all">All sensors</option>';
+
+        sensorNames.forEach((name, id) => {
+            const option = document.createElement("option");
+            option.value = id;
+            option.textContent = name;
+            select.appendChild(option);
+        });
+
+        select.value = sensorNames.has(previousValue)
+            ? previousValue
+            : "all";
+
+        renderAlertHistory();
+
+    } catch (error) {
+        console.error("Alert history error:", error);
+
+        status.textContent = "We couldn't load the alert history.";
+
+        list.innerHTML = `
+            <div class="alert-empty-state">
+                <div class="empty-icon">📡</div>
+                <h3>Unable to load alerts</h3>
+                <p>Check that Flask is running and the API endpoint exists.</p>
+            </div>
+        `;
+    }
+}
+
+/* AUTOMATIC ALERT HISTORY REFRESH */
+
+let alertRefreshTimer = null;
+
+function startAlertAutoRefresh() {
+    // Prevent multiple refresh timers.
+    if (alertRefreshTimer !== null) {
+        clearInterval(alertRefreshTimer);
+    }
+
+    // Refresh saved AQI records every 30 seconds.
+    alertRefreshTimer = setInterval(() => {
+        loadAlertHistory();
+    }, 30000);
+}
+
+// Start automatic refresh when the page loads.
+startAlertAutoRefresh();
+
+
+function renderAlertHistory() {
+    const list = document.getElementById("alertHistoryList");
+    const status = document.getElementById("alertHistoryStatus");
+
+    const sensorFilter =
+        document.getElementById("alertSensorFilter").value;
+
+    const severityFilter =
+        document.getElementById("alertSeverityFilter").value;
+
+    const search =
+        document.getElementById("alertSearch").value.trim().toLowerCase();
+
+    // Filter records using their actual AQI values.
+    const filtered = historicalAlerts.filter(alert => {
+        const aqi = Number(alert.aqi);
+
+        const severity = !Number.isFinite(aqi)
+            ? "normal"
+            : aqi > 300
+            ? "critical"
+            : aqi > 200
+            ? "high"
+            : "normal";
+
+        const matchesSensor =
+            sensorFilter === "all" || alert.node_id === sensorFilter;
+
+        const matchesSeverity =
+            severityFilter === "all" || severity === severityFilter;
+
+        const matchesSearch =
+            (alert.sensor_name || "").toLowerCase().includes(search) ||
+            (alert.node_id || "").toLowerCase().includes(search);
+
+        return matchesSensor && matchesSeverity && matchesSearch;
+    });
+
+    list.innerHTML = "";
+
+    if (!filtered.length) {
+        status.textContent = "No matching AQI records.";
+
+        list.innerHTML = `
+            <div class="alert-empty-state">
+                <div class="empty-icon">🌿</div>
+                <h3>No matching records</h3>
+                <p>Try selecting another sensor or alert level.</p>
+            </div>
+        `;
+        return;
+    }
+
+    status.textContent =
+        `Showing ${filtered.length} AQI record${filtered.length === 1 ? "" : "s"}.`;
+
+    filtered.forEach(alert => {
+        const aqi = Number(alert.aqi);
+
+        const severity = !Number.isFinite(aqi)
+            ? "normal"
+            : aqi > 300
+            ? "critical"
+            : aqi > 200
+            ? "high"
+            : "normal";
+
+        const date = new Date(alert.timestamp);
+
+        const formattedDate = !alert.timestamp ||
+            Number.isNaN(date.getTime())
+            ? alert.timestamp || "Unknown time"
+            : date.toLocaleString();
+
+        const aqiText = Number.isFinite(aqi)
+            ? aqi.toFixed(0)
+            : "--";
+
+        const message = severity === "critical"
+            ? "Very high pollution detected. Please review this location."
+            : severity === "high"
+            ? "Elevated pollution detected. Please monitor this location."
+            : "No high-AQI alert for this saved reading.";
+
+        const badgeText = severity === "critical"
+            ? "🚨 CRITICAL"
+            : severity === "high"
+            ? "⚠️ HIGH"
+            : "✅ NORMAL";
+
+        const card = document.createElement("article");
+        card.className = `friendly-alert-card ${severity}`;
+
+        card.innerHTML = `
+            <div class="friendly-alert-info">
+                <h3>📍 ${escapeHTML(alert.sensor_name || "Unknown sensor")}</h3>
+                <p>${escapeHTML(message)}</p>
+                <p>🕒 ${escapeHTML(formattedDate)}</p>
+                <p>Sensor ID: ${escapeHTML(alert.node_id || "N/A")}</p>
+                <p>Category: ${escapeHTML(alert.category || "Unknown")}</p>
+            </div>
+
+            <div class="friendly-alert-right">
+                <span class="friendly-alert-badge ${severity}">
+                    ${badgeText}
+                </span>
+                <div class="friendly-alert-aqi">${aqiText}</div>
+                <small>AQI</small>
+            </div>
+        `;
+
+        list.appendChild(card);
+    });
+}
 
     loadDashboard();
 
 
 </script>
-
-
 </body>
-
 </html>
-```

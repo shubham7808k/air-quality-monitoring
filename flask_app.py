@@ -1,8 +1,3 @@
-"""
-Flask Web Dashboard for Air Quality Monitoring System
-Provides real-time visualization of AQI data
-"""
-
 from flask import Flask, render_template, jsonify, request
 from flask_cors import CORS
 from datetime import datetime, timedelta, timezone
@@ -204,6 +199,119 @@ def get_aqi_24h(node_id):
     except Exception as e:
         logger.error(f"Error: {e}")
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/analytics', methods=['GET'])
+def get_analytics():
+    """Return historical readings and AQI for the Analytics popup."""
+    try:
+        node_id = request.args.get('node_id', '').strip()
+
+        if not node_id:
+            return jsonify({
+                'success': False,
+                'error': 'Please provide a sensor node_id'
+            }), 400
+
+        # Retrieve real historical data from the existing database.
+        readings = db.get_last_24h_readings(node_id)
+        aqi_history = db.get_aqi_24h_history(node_id)
+
+        # Format database objects as JSON-compatible dictionaries.
+        readings_data = []
+        for reading in readings or []:
+            readings_data.append({
+                'timestamp': reading.timestamp.isoformat(),
+                'pm25': float(reading.pm25 or 0),
+                'pm10': float(reading.pm10 or 0),
+                'temperature': float(reading.temperature or 0),
+                'humidity': float(reading.humidity or 0)
+            })
+
+        aqi_data = []
+        for record in aqi_history or []:
+            aqi_data.append({
+                'timestamp': record.timestamp.isoformat(),
+                'aqi': float(record.aqi_value),
+                'category': record.aqi_category,
+                'color': get_aqi_color(record.aqi_value)
+            })
+
+        return jsonify({
+            'success': True,
+            'node_id': node_id,
+            'readings': readings_data,
+            'aqi_history': aqi_data
+        }), 200
+
+    except Exception as e:
+        logger.exception('Analytics API failed')
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+    
+
+# ============= HISTORICAL ALERTS API =============
+
+@app.route('/api/alerts/history', methods=['GET'])
+def get_alert_history():
+    """Return saved AQI history for all sensors from the last 24 hours."""
+    try:
+        alerts = []
+
+        for node_id, sensor_info in SENSOR_NODES.items():
+            records = db.get_aqi_24h_history(node_id) or []
+            sensor_name = sensor_info.get('name', node_id)
+
+            for record in records:
+                aqi = float(record.aqi_value or 0)
+
+                # Classify the AQI without excluding normal records.
+                if aqi > 300:
+                    severity = 'critical'
+                elif aqi > 200:
+                    severity = 'high'
+                else:
+                    severity = 'normal'
+
+                alerts.append({
+                    'node_id': node_id,
+                    'sensor_name': sensor_name,
+                    'timestamp': (
+                        record.timestamp.isoformat()
+                        if record.timestamp else None
+                    ),
+                    'aqi': round(aqi, 1),
+                    'category': record.aqi_category,
+                    'severity': severity,
+                    'dominant_pollutant': getattr(
+                        record, 'dominant_pollutant', None
+                    ),
+                    'message': (
+                        f'{sensor_name}: AQI {aqi:.1f} '
+                        f'- {record.aqi_category}'
+                    )
+                })
+
+        # Newest records first.
+        alerts.sort(
+            key=lambda item: item['timestamp'] or '',
+            reverse=True
+        )
+
+        return jsonify({
+            'success': True,
+            'count': len(alerts),
+            'alerts': alerts
+        }), 200
+
+    except Exception as e:
+        logger.exception('Historical AQI API failed')
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 
 @app.route('/api/statistics', methods=['GET'])
 def get_statistics():
