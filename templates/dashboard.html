@@ -3412,6 +3412,7 @@ async function loadAnalytics() {
 
             displaySensors(data.sensors || []);
 
+           await loadArduinoSensorCard();
 
             document.getElementById(
                 "last-update"
@@ -3925,6 +3926,160 @@ async function loadAnalytics() {
         });
 
     }
+
+    
+/* =====================================================
+   ARDUINO WEATHER SENSOR CARD
+   Keeps existing AQI sensor cards unchanged
+===================================================== */
+
+async function loadArduinoSensorCard() {
+    const grid = document.getElementById("sensors-grid");
+    if (!grid) return;
+
+    // Remove only the previous Arduino card.
+    const oldCard = document.getElementById("arduino-sensor-card");
+    if (oldCard) oldCard.remove();
+
+    let data;
+
+    try {
+        const response = await fetch("/api/arduino/latest", {
+            cache: "no-store"
+        });
+
+        if (!response.ok) {
+            throw new Error("Arduino API returned HTTP " + response.status);
+        }
+
+        data = await response.json();
+    } catch (error) {
+        console.error("Arduino sensor error:", error);
+        data = {
+            connected: false,
+            error: error.message,
+            latest: null
+        };
+    }
+
+    const reading = data.latest || {};
+    const connected = data.connected === true;
+
+    const displayValue = (value, digits = 1) => {
+        if (value === null || value === undefined || value === "") {
+            return "--";
+        }
+
+        const number = Number(value);
+        return Number.isFinite(number)
+            ? number.toFixed(digits)
+            : escapeHTML(value);
+    };
+
+    const card = document.createElement("div");
+    card.className = "sensor-card";
+    card.id = "arduino-sensor-card";
+    card.dataset.search = "arduino weather usb temperature humidity pressure rain";
+
+    const statusColor = connected ? "#16a34a" : "#dc2626";
+    const statusText = connected ? "● Connected" : "● Waiting for data";
+
+    const updated = reading.timestamp
+        ? new Date(reading.timestamp).toLocaleTimeString()
+        : "No reading received yet";
+
+    card.innerHTML = `
+        <div class="sensor-head">
+            <div>
+                <div class="sensor-name">
+                    🔌 Arduino Weather Sensor
+                </div>
+                <div class="sensor-location">
+                    Arduino Uno · Weather monitoring
+                </div>
+            </div>
+
+            <span class="sensor-status"
+                  style="color:${statusColor};">
+                ${statusText}
+            </span>
+        </div>
+
+        <div class="sensor-aqi">
+            <div style="font-size:32px;">🌦️</div>
+            <div>
+                <div style="font-weight:700;font-size:15px;">
+                    Weather Readings
+                </div>
+                <div class="sensor-category">
+                    Live Arduino measurements
+                </div>
+            </div>
+        </div>
+
+        <div class="measurement-grid">
+            <div class="measurement">
+                <div class="measurement-label">BMP180 Temperature</div>
+                <div class="measurement-value">
+                    ${displayValue(reading.temp_bmp)} °C
+                </div>
+            </div>
+
+            <div class="measurement">
+                <div class="measurement-label">DHT Temperature</div>
+                <div class="measurement-value">
+                    ${displayValue(reading.temp_dht)} °C
+                </div>
+            </div>
+
+            <div class="measurement">
+                <div class="measurement-label">Humidity</div>
+                <div class="measurement-value">
+                    ${displayValue(reading.humidity)} %
+                </div>
+            </div>
+
+            <div class="measurement">
+                <div class="measurement-label">Atmospheric Pressure</div>
+                <div class="measurement-value">
+                    ${displayValue(reading.pressure_hpa)} hPa
+                </div>
+            </div>
+
+            <div class="measurement">
+                <div class="measurement-label">Rain Status</div>
+                <div class="measurement-value">
+                    ${escapeHTML(reading.rain_status || "--")}
+                </div>
+            </div>
+
+            <div class="measurement">
+                <div class="measurement-label">Rain Sensor Raw Value</div>
+                <div class="measurement-value">
+                    ${displayValue(reading.rain_raw, 0)}
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top:12px;font-size:11px;color:var(--muted);">
+            ${
+                connected
+                    ? "Arduino data received successfully."
+                    : "Check USB connection, COM port and Serial Monitor."
+            }
+        </div>
+
+        <div class="sensor-footer">
+            <span style="color:${statusColor};">
+                ${connected ? "Arduino online" : "Arduino offline"}
+            </span>
+            <span>Updated ${escapeHTML(updated)}</span>
+        </div>
+    `;
+
+    grid.appendChild(card);
+}
+
 
 
 
