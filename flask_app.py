@@ -10,6 +10,7 @@ from backend.aqi_calculation import AQICalculator
 from backend.spatial_mapping import SpatialAQIMapper
 from config import SENSOR_NODES, AQI_CATEGORIES
 import pandas as pd
+from backend.arduino_reader import arduino_reader
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -398,6 +399,24 @@ def not_found(error):
 def server_error(error):
     """Handle 500 errors"""
     return jsonify({'error': 'Server error'}), 500
+
+
+@app.route("/api/arduino/latest")
+def arduino_latest():
+    arduino_reader.start()
+    return jsonify(arduino_reader.snapshot())
+
+
+@app.route("/api/arduino/history")
+def arduino_history():
+    arduino_reader.start()
+    return jsonify(arduino_reader.get_history())
+
+
+@app.route("/arduino-weather")
+def arduino_weather_page():
+    return render_template("arduino_weather.html")
+
 
 # ============= MAIN =============
 

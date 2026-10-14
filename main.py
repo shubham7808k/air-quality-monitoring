@@ -10,7 +10,8 @@ import numpy as np
 from datetime import datetime, timezone
 import logging
 import os
-
+ARDUINO_SERIAL_PORT = os.getenv("ARDUINO_SERIAL_PORT", "COM3")
+ARDUINO_BAUD_RATE = 9600
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
