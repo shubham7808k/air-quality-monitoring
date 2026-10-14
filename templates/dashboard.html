@@ -3086,17 +3086,22 @@ button {
             >&times;</button>
         </div>
 
-        <div class="analytics-controls">
-            <label for="analyticsSensor">Select sensor:</label>
+        
+<div class="analytics-controls">
+    <label for="analyticsSensor">Select sensor:</label>
 
-            <select id="analyticsSensor">
-                <option value="">Select a sensor</option>
-            </select>
+    <select id="analyticsSensor">
+        <option value="">Select a sensor</option>
+    </select>
 
-            <button type="button" onclick="loadAnalytics()">
-                🔄 Refresh Graphs
-            </button>
-        </div>
+    <button type="button" onclick="refreshSelectedAnalytics()">
+        🔄 Refresh Data
+    </button>
+</div>
+
+        
+
+
 
         <p
             id="analyticsStatus"
@@ -3130,6 +3135,79 @@ button {
             <h3>Historical Pollutant Comparison</h3>
             <canvas id="analyticsPollutantChart"></canvas>
         </div>
+        
+<!-- ARDUINO WEATHER ANALYTICS -->
+<div id="arduinoAnalyticsSection"
+     class="analytics-weather-section"
+     style="display: none;">
+    <div class="analytics-header">
+        <div>
+            <h2>🌦️ Arduino Weather Analytics</h2>
+            <p>Historical readings from your weather station</p>
+        </div>
+
+        <button type="button" onclick="loadArduinoAnalytics()">
+            🔄 Refresh Weather Data
+        </button>
+    </div>
+
+    <p id="arduinoAnalyticsStatus" class="analytics-status">
+        Loading Arduino historical readings...
+    </p>
+
+    <div class="analytics-stats">
+        <div class="analytics-stat">
+            <span>BMP180 Temperature</span>
+            <strong id="weatherBmpTemp">-- °C</strong>
+        </div>
+
+        <div class="analytics-stat">
+            <span>DHT Temperature</span>
+            <strong id="weatherDhtTemp">-- °C</strong>
+        </div>
+
+        <div class="analytics-stat">
+            <span>Humidity</span>
+            <strong id="weatherHumidity">-- %</strong>
+        </div>
+
+        <div class="analytics-stat">
+            <span>Pressure</span>
+            <strong id="weatherPressure">-- hPa</strong>
+        </div>
+
+        <div class="analytics-stat">
+            <span>Rain Status</span>
+            <strong id="weatherRainStatus">--</strong>
+        </div>
+
+        <div class="analytics-stat">
+            <span>Weather Records</span>
+            <strong id="weatherRecordCount">0</strong>
+        </div>
+    </div>
+
+    <div class="analytics-chart">
+        <h3>🌡️ Temperature History</h3>
+        <canvas id="weatherTemperatureChart"></canvas>
+    </div>
+
+    <div class="analytics-chart">
+        <h3>💧 Humidity History</h3>
+        <canvas id="weatherHumidityChart"></canvas>
+    </div>
+
+    <div class="analytics-chart">
+        <h3>🌬️ Atmospheric Pressure History</h3>
+        <canvas id="weatherPressureChart"></canvas>
+    </div>
+
+    <div class="analytics-chart">
+        <h3>🌧️ Rain Sensor History</h3>
+        <canvas id="weatherRainChart"></canvas>
+    </div>
+</div>
+
 
     </div>
 </div>
@@ -3158,47 +3236,65 @@ button {
 let analyticsAqiChart = null;
 let analyticsPollutantChart = null;
 
+
 function openAnalytics() {
     document.getElementById("analyticsModal").style.display = "flex";
     document.body.style.overflow = "hidden";
 
     const select = document.getElementById("analyticsSensor");
     const previousSelection = select.value;
-
-    // Populate the selector from actual dashboard sensors.
     const sensors = dashboardData?.sensors || [];
 
     select.innerHTML = '<option value="">Select a sensor</option>';
 
+    // Existing AirSense sensors
     sensors.forEach(sensor => {
         const id = sensor.node_id || sensor.id;
-        console.log("Analytics sensor:", sensor.name, "ID:", id);
-
         if (!id) return;
 
         const option = document.createElement("option");
         option.value = id;
         option.textContent = sensor.name || id;
-
         select.appendChild(option);
     });
 
-    if (
-        previousSelection &&
-        [...select.options].some(option => option.value === previousSelection)
-    ) {
+    // Arduino option in the same dropdown
+    const arduinoOption = document.createElement("option");
+    arduinoOption.value = "arduino";
+    arduinoOption.textContent = "Arduino Weather Station";
+    select.appendChild(arduinoOption);
+
+    if ([...select.options].some(option =>
+        option.value === previousSelection && previousSelection
+    )) {
         select.value = previousSelection;
+    } else {
+        select.value = "";
     }
 
-    if (select.value) {
+    updateAnalyticsView();
+}
+
+
+function updateAnalyticsView() {
+    const sensorId = document.getElementById("analyticsSensor").value;
+    const weatherSection = document.getElementById("arduinoAnalyticsSection");
+    const aqiSection = document.getElementById("aqiAnalyticsSection");
+
+    if (sensorId === "arduino") {
+        weatherSection.style.display = "block";
+        if (aqiSection) aqiSection.style.display = "none";
+        loadArduinoAnalytics();
+    } else if (sensorId) {
+        weatherSection.style.display = "none";
+        if (aqiSection) aqiSection.style.display = "block";
         loadAnalytics();
     } else {
-        document.getElementById("analyticsStatus").textContent =
-            sensors.length
-                ? "Select a sensor to view its historical data."
-                : "No sensor information is available in the dashboard.";
+        weatherSection.style.display = "none";
+        if (aqiSection) aqiSection.style.display = "none";
     }
 }
+
 
 function closeAnalytics() {
     document.getElementById("analyticsModal").style.display = "none";
@@ -3220,9 +3316,32 @@ document.addEventListener("keydown", event => {
     }
 });
 
+
 document.getElementById("analyticsSensor").addEventListener("change", () => {
-    loadAnalytics();
+    const sensorId = document.getElementById("analyticsSensor").value;
+
+    const weatherSection =
+        document.getElementById("arduinoAnalyticsSection");
+
+    if (sensorId === "arduino") {
+        // Show Arduino weather analytics
+        weatherSection.style.display = "block";
+        loadArduinoAnalytics();
+
+    } else {
+        // Hide Arduino analytics for all other selections
+        weatherSection.style.display = "none";
+
+        if (sensorId) {
+            loadAnalytics();
+        } else {
+            document.getElementById("analyticsStatus").textContent =
+                "Select a sensor to view its historical data.";
+        }
+    }
 });
+
+
 
 async function loadAnalytics() {
     const sensorId = document.getElementById("analyticsSensor").value;
@@ -3666,13 +3785,33 @@ async function loadAnalytics() {
             );
 
 
-        grid.innerHTML = "";
+       
+grid.innerHTML = "";
+
+// Keep the existing AirSense backend sensor data available
+window.currentAirSenseSensors = Array.isArray(sensors)
+    ? sensors
+    : [];
+
+// Count existing AirSense sensors for now
+document.getElementById("sensor-count").textContent =
+    window.currentAirSenseSensors.length;
 
 
-        document.getElementById(
-            "sensor-count"
-        ).textContent =
-            sensors.length;
+fetch("/api/arduino/latest")
+    .then(response => response.json())
+    .then(arduinoData => {
+        const arduinoIsActive =
+            arduinoData.connected === true &&
+            arduinoData.latest !== null;
+
+        document.getElementById("sensor-count").textContent =
+            sensors.length + (arduinoIsActive ? 1 : 0);
+    })
+    .catch(error => {
+        console.error("Arduino status check failed:", error);
+    });
+
 
 
         if (!sensors.length) {
@@ -4160,6 +4299,62 @@ function displayAlerts(alerts) {
 
         list.appendChild(item);
     });
+}
+
+async function loadArduinoWeatherAlerts() {
+    try {
+        const response = await fetch("/api/arduino/latest");
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        const reading = data.latest;
+
+        if (!reading) {
+            console.log("Arduino readings are not available yet.");
+            return;
+        }
+
+        const alerts = [];
+
+        // Example thresholds; adjust for your project requirements.
+        if (Number(reading.temp_dht) >= 35) {
+            alerts.push({
+                title: "High Temperature",
+                message: `Arduino recorded ${reading.temp_dht} °C.`,
+                level: "high"
+            });
+        }
+
+        if (Number(reading.humidity) >= 80) {
+            alerts.push({
+                title: "High Humidity",
+                message: `Arduino recorded ${reading.humidity}% humidity.`,
+                level: "medium"
+            });
+        }
+
+        if (
+            String(reading.rain_status).toUpperCase() === "WET"
+        ) {
+            alerts.push({
+                title: "Rain Detected",
+                message: "The Arduino rain sensor indicates wet conditions.",
+                level: "medium"
+            });
+        }
+
+        console.log("Arduino weather alerts:", alerts);
+
+        // Return the alerts so they can be merged with the existing alerts.
+        return alerts;
+
+    } catch (error) {
+        console.error("Unable to load Arduino weather alerts:", error);
+        return [];
+    }
 }
 
 
@@ -4698,6 +4893,197 @@ startAlertAutoRefresh();
     loadDashboard();
 
     
+
+/* =====================================================
+   ARDUINO WEATHER ANALYTICS
+===================================================== */
+
+let weatherTemperatureChart = null;
+let weatherHumidityChart = null;
+let weatherPressureChart = null;
+let weatherRainChart = null;
+
+async function loadArduinoAnalytics() {
+    const status = document.getElementById("arduinoAnalyticsStatus");
+
+    status.textContent = "Loading Arduino historical readings...";
+
+    try {
+        const response = await fetch("/api/arduino/history", {
+            cache: "no-store"
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        // Accept either a direct array or an object containing history.
+        const history = Array.isArray(result)
+            ? result
+            : (result.history || result.data || []);
+
+        if (!history.length) {
+            status.textContent =
+                "No Arduino history found. Check the USB connection and serial reader.";
+            return;
+        }
+
+        // Sort readings chronologically.
+        history.sort((a, b) =>
+            new Date(a.timestamp) - new Date(b.timestamp)
+        );
+
+        const latest = history[history.length - 1];
+
+        const numberOrNull = value => {
+            if (value === null || value === undefined || value === "") {
+                return null;
+            }
+
+            const number = Number(value);
+            return Number.isFinite(number) ? number : null;
+        };
+
+        const display = (id, value, unit = "") => {
+            document.getElementById(id).textContent =
+                value === null ? "--" : `${value}${unit}`;
+        };
+
+        display("weatherBmpTemp", numberOrNull(latest.temp_bmp), " °C");
+        display("weatherDhtTemp", numberOrNull(latest.temp_dht), " °C");
+        display("weatherHumidity", numberOrNull(latest.humidity), " %");
+        display("weatherPressure", numberOrNull(latest.pressure_hpa), " hPa");
+
+        document.getElementById("weatherRainStatus").textContent =
+            latest.rain_status || "--";
+
+        document.getElementById("weatherRecordCount").textContent =
+            history.length;
+
+        const labels = history.map(item => {
+            const date = new Date(item.timestamp);
+            return Number.isNaN(date.getTime())
+                ? "Unknown"
+                : date.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit"
+                });
+        });
+
+        const values = key => history.map(item =>
+            numberOrNull(item[key])
+        );
+
+        const createChart = (existingChart, canvasId, label, key, color, unit) => {
+            if (existingChart) {
+                existingChart.destroy();
+            }
+
+            return new Chart(document.getElementById(canvasId), {
+                type: "line",
+                data: {
+                    labels,
+                    datasets: [{
+                        label,
+                        data: values(key),
+                        borderColor: color,
+                        backgroundColor: color + "22",
+                        fill: true,
+                        tension: 0.3,
+                        spanGaps: true,
+                        pointRadius: history.length > 100 ? 0 : 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: "index"
+                    },
+                    plugins: {
+                        legend: { display: true }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { maxTicksLimit: 8 }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: unit
+                            }
+                        }
+                    }
+                }
+            });
+        };
+
+        weatherTemperatureChart = createChart(
+            weatherTemperatureChart,
+            "weatherTemperatureChart",
+            "BMP180 Temperature",
+            "temp_bmp",
+            "#ea580c",
+            "Temperature (°C)"
+        );
+
+        weatherHumidityChart = createChart(
+            weatherHumidityChart,
+            "weatherHumidityChart",
+            "Humidity",
+            "humidity",
+            "#0284c7",
+            "Humidity (%)"
+        );
+
+        weatherPressureChart = createChart(
+            weatherPressureChart,
+            "weatherPressureChart",
+            "Atmospheric Pressure",
+            "pressure_hpa",
+            "#7c3aed",
+            "Pressure (hPa)"
+        );
+
+        weatherRainChart = createChart(
+            weatherRainChart,
+            "weatherRainChart",
+            "Rain Sensor Raw Reading",
+            "rain_raw",
+            "#059669",
+            "Raw sensor value"
+        );
+
+        status.textContent =
+            `Showing ${history.length} Arduino records. Latest reading: ${
+                new Date(latest.timestamp).toLocaleString()
+            }.`;
+
+    } catch (error) {
+        console.error("Arduino analytics error:", error);
+
+        status.textContent =
+            "Could not load Arduino history. Check Flask and /api/arduino/history.";
+    }
+}
+
+
+function refreshSelectedAnalytics() {
+    const sensorId = document.getElementById("analyticsSensor").value;
+
+    if (sensorId === "arduino") {
+        loadArduinoAnalytics();
+    } else if (sensorId) {
+        loadAnalytics();
+    } else {
+        document.getElementById("analyticsStatus").textContent =
+            "Please select a sensor first.";
+    }
+}
 
 
 </script>

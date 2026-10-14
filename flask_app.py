@@ -11,6 +11,9 @@ from backend.spatial_mapping import SpatialAQIMapper
 from config import SENSOR_NODES, AQI_CATEGORIES
 import pandas as pd
 from backend.arduino_reader import arduino_reader
+import threading
+import time
+from backend.data_collection import SensorDataCollector
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -24,6 +27,47 @@ CORS(app)
 db = DatabaseManager()
 aqi_calc = AQICalculator()
 mapper = SpatialAQIMapper()
+
+# Automatic simulated sensor data updates
+collector = SensorDataCollector()
+
+def update_sensor_data():
+    """Generate new simulated readings and calculate AQI."""
+    while True:
+        try:
+            collector.collect_all_sensors(use_simulation=True)
+
+            latest_readings = db.get_latest_reading_all_nodes()
+
+            for reading in latest_readings:
+                reading_dict = {
+                    "pm25": reading.pm25,
+                    "pm10": reading.pm10,
+                    "no2": reading.no2 or 0,
+                    "co": reading.co or 0,
+                    "temperature": reading.temperature,
+                    "humidity": reading.humidity,
+                    "timestamp": reading.timestamp
+                }
+
+                result = aqi_calc.calculate_aqi(reading_dict)
+
+                db.add_aqi_value({
+                    "node_id": reading.node_id,
+                    "timestamp": reading.timestamp,
+                    "aqi_value": result["value"],
+                    "aqi_category": result["category"],
+                    "dominant_pollutant": result["dominant_pollutant"],
+                    "color_code": result["color"]
+                })
+
+            logger.info("AirSense sensor readings and AQI updated.")
+
+        except Exception:
+            logger.exception("Automatic sensor update failed")
+
+        time.sleep(60)
+
 
 # ============= HELPER FUNCTIONS =============
 
@@ -420,12 +464,29 @@ def arduino_weather_page():
 
 # ============= MAIN =============
 
+
+# ============= MAIN =============
+
 if __name__ == '__main__':
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("STARTING FLASK WEB DASHBOARD")
-    print("="*70)
+    print("=" * 70)
     print("\n✓ Dashboard running at: http://localhost:5000")
     print("✓ API available at: http://localhost:5000/api/*")
+    print("✓ Automatic sensor updates: every 60 seconds")
     print("\nPress Ctrl+C to stop\n")
-    
-    app.run(host='0.0.0.0', port=5000, debug=True)
+
+    # Start automatic sensor updates in the background
+    updater = threading.Thread(
+        target=update_sensor_data,
+        daemon=True
+    )
+    updater.start()
+
+    # Disable Flask's reloader to prevent duplicate updater threads
+    app.run(
+        host='0.0.0.0',
+        port=5000,
+        debug=True,
+        use_reloader=False
+    )
