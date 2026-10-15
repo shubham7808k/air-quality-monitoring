@@ -19,27 +19,17 @@ class ArduinoSerialReader:
         self.running = False
         self.thread = None
 
-    @staticmethod
-    def to_float(value):
-        try:
-            result = float(value)
-            return result if result == result else None
-        except (ValueError, TypeError):
-            return None
-
     def parse_line(self, line):
         parts = line.strip().split(",")
 
-        # Expected Arduino CSV data format
-        if len(parts) != 7 or parts[0] != "DATA":
-            return None
-
-        # Ignore the CSV header
-        if parts[1] == "tempBMP":
+        # Arduino sends: dustRaw,dustVoltage,mqRaw
+        if len(parts) != 3:
             return None
 
         try:
-            rain_raw = int(parts[5])
+            dust_raw = int(parts[0])
+            dust_voltage = float(parts[1])
+            mq_raw = int(parts[2])
         except (ValueError, TypeError):
             return None
 
@@ -47,12 +37,9 @@ class ArduinoSerialReader:
             "timestamp": datetime.now().astimezone().isoformat(
                 timespec="seconds"
             ),
-            "temp_bmp": self.to_float(parts[1]),
-            "pressure_hpa": self.to_float(parts[2]),
-            "temp_dht": self.to_float(parts[3]),
-            "humidity": self.to_float(parts[4]),
-            "rain_raw": rain_raw,
-            "rain_status": parts[6].strip().upper(),
+            "dust_raw": dust_raw,
+            "dust_voltage": dust_voltage,
+            "mq_raw": mq_raw,
             "source": "arduino"
         }
 

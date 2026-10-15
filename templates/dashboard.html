@@ -3097,13 +3097,14 @@ button {
     <button type="button" onclick="refreshSelectedAnalytics()">
         🔄 Refresh Data
     </button>
+
+
 </div>
 
-        
+<!-- AQI ANALYTICS SECTION -->
+<div id="aqiAnalyticsSection">
 
-
-
-        <p
+    <p
             id="analyticsStatus"
             class="analytics-status"
             role="status"
@@ -3135,6 +3136,7 @@ button {
             <h3>Historical Pollutant Comparison</h3>
             <canvas id="analyticsPollutantChart"></canvas>
         </div>
+    </div>
         
 <!-- ARDUINO WEATHER ANALYTICS -->
 <div id="arduinoAnalyticsSection"
@@ -3237,64 +3239,61 @@ let analyticsAqiChart = null;
 let analyticsPollutantChart = null;
 
 
-function openAnalytics() {
-    document.getElementById("analyticsModal").style.display = "flex";
-    document.body.style.overflow = "hidden";
-
-    const select = document.getElementById("analyticsSensor");
-    const previousSelection = select.value;
-    const sensors = dashboardData?.sensors || [];
-
-    select.innerHTML = '<option value="">Select a sensor</option>';
-
-    // Existing AirSense sensors
-    sensors.forEach(sensor => {
-        const id = sensor.node_id || sensor.id;
-        if (!id) return;
-
-        const option = document.createElement("option");
-        option.value = id;
-        option.textContent = sensor.name || id;
-        select.appendChild(option);
-    });
-
-    // Arduino option in the same dropdown
-    const arduinoOption = document.createElement("option");
-    arduinoOption.value = "arduino";
-    arduinoOption.textContent = "Arduino Weather Station";
-    select.appendChild(arduinoOption);
-
-    if ([...select.options].some(option =>
-        option.value === previousSelection && previousSelection
-    )) {
-        select.value = previousSelection;
-    } else {
-        select.value = "";
-    }
-
-    updateAnalyticsView();
-}
-
-
 function updateAnalyticsView() {
-    const sensorId = document.getElementById("analyticsSensor").value;
-    const weatherSection = document.getElementById("arduinoAnalyticsSection");
+    const select = document.getElementById("analyticsSensor");
     const aqiSection = document.getElementById("aqiAnalyticsSection");
+    const weatherSection = document.getElementById("arduinoAnalyticsSection");
 
-    if (sensorId === "arduino") {
-        weatherSection.style.display = "block";
-        if (aqiSection) aqiSection.style.display = "none";
+    if (!select || !aqiSection || !weatherSection) {
+        console.error("Analytics elements not found.");
+        return;
+    }
+
+    const sensorId = select.value;
+    const isArduino = sensorId === "arduino";
+
+    // Show only the selected sensor's section.
+    aqiSection.style.display =
+        sensorId && !isArduino ? "" : "none";
+
+    weatherSection.style.display =
+        isArduino ? "" : "none";
+
+    if (!sensorId) {
+        return;
+    }
+
+    if (isArduino) {
+        // Reset AQI statistics.
+        document.getElementById("analyticsAvg").textContent = "--";
+        document.getElementById("analyticsMax").textContent = "--";
+        document.getElementById("analyticsCount").textContent = "0";
+
+        // Clear existing AQI charts.
+        if (analyticsAqiChart) {
+            analyticsAqiChart.destroy();
+            analyticsAqiChart = null;
+        }
+
+        if (analyticsPollutantChart) {
+            analyticsPollutantChart.destroy();
+            analyticsPollutantChart = null;
+        }
+
         loadArduinoAnalytics();
-    } else if (sensorId) {
-        weatherSection.style.display = "none";
-        if (aqiSection) aqiSection.style.display = "block";
-        loadAnalytics();
+
     } else {
-        weatherSection.style.display = "none";
-        if (aqiSection) aqiSection.style.display = "none";
+        // Reset Arduino statistics.
+        document.getElementById("weatherBmpTemp").textContent = "-- °C";
+        document.getElementById("weatherDhtTemp").textContent = "-- °C";
+        document.getElementById("weatherHumidity").textContent = "-- %";
+        document.getElementById("weatherPressure").textContent = "-- hPa";
+        document.getElementById("weatherRainStatus").textContent = "--";
+        document.getElementById("weatherRecordCount").textContent = "0";
+
+        loadAnalytics();
     }
 }
-
 
 function closeAnalytics() {
     document.getElementById("analyticsModal").style.display = "none";
@@ -3492,12 +3491,16 @@ async function loadAnalytics() {
 
         try {
 
-            const response =
-                await fetch("/api/dashboard");
+            
+const response = await fetch("/api/dashboard");
 
+const data = await response.json();
 
-            const data =
-                await response.json();
+console.log("Dashboard API status:", response.status);
+console.log("FULL DASHBOARD DATA:", data);
+console.log("ALERTS FROM API:", data.alerts);
+console.log("AVAILABLE DATA KEYS:", Object.keys(data));
+
 
 
             if (!response.ok) {
@@ -4226,22 +4229,65 @@ async function loadArduinoSensorCard() {
        ALERTS
     ===================================================== */
 
-   
+ 
 function displayAlerts(alerts) {
+    console.log("DISPLAY ALERTS FUNCTION LOADED");
+     console.log("displayAlerts() called with:", alerts);
+    console.log(
+        "Received alert count:",
+        Array.isArray(alerts) ? alerts.length : "not an array"
+    );
+
     const section = document.getElementById("alerts-section");
     const list = document.getElementById("alerts-list");
 
     if (!section || !list) return;
 
-    if (!alerts || alerts.length === 0) {
+    // Keep the complete list separate from the displayed alerts.
+    const allAlerts = Array.isArray(alerts) ? alerts : [];
+
+    if (allAlerts.length === 0) {
         section.style.display = "none";
+        list.innerHTML = "";
         return;
     }
+
+    // Get alert timestamps from common field names.
+    function getAlertTime(alert) {
+        const value =
+            alert.timestamp ??
+            alert.created_at ??
+            alert.createdAt ??
+            alert.time ??
+            alert.date;
+
+        if (value === undefined || value === null || value === "") {
+            return 0;
+        }
+
+        // Support Unix timestamps in seconds or milliseconds.
+        if (typeof value === "number") {
+            return value < 1e12 ? value * 1000 : value;
+        }
+
+        const parsed = Date.parse(value);
+        return Number.isNaN(parsed) ? 0 : parsed;
+    }
+
+    // Sort newest first, without modifying the original array.
+    const sortedAlerts = [...allAlerts].sort(
+        (a, b) => getAlertTime(b) - getAlertTime(a)
+    );
+
+    // Only five alerts are rendered in the dashboard.
+    const latestAlerts = sortedAlerts.slice(0, 5);
+    console.log("Total alerts received:", allAlerts.length);
+    console.log("Alerts selected for display:", latestAlerts.length);
 
     section.style.display = "block";
     list.innerHTML = "";
 
-    alerts.forEach(alert => {
+    latestAlerts.forEach(alert => {
         const severity = (
             alert.severity || "medium"
         ).toLowerCase();
@@ -4276,6 +4322,11 @@ function displayAlerts(alerts) {
 
         const aqi = alert.aqi ?? alert.AQI;
 
+        const timestamp = getAlertTime(alert);
+        const timeText = timestamp
+            ? new Date(timestamp).toLocaleString()
+            : "Time unavailable";
+
         item.innerHTML = `
             <div class="alert-icon">${icon}</div>
 
@@ -4293,13 +4344,14 @@ function displayAlerts(alerts) {
                 <span class="alert-severity-badge ${colorClass}">
                     ${label}
                 </span>
-                <div class="alert-time">● Active</div>
+                <div class="alert-time">${escapeHTML(timeText)}</div>
             </div>
         `;
 
         list.appendChild(item);
     });
 }
+
 
 async function loadArduinoWeatherAlerts() {
     try {
@@ -5084,6 +5136,102 @@ function refreshSelectedAnalytics() {
             "Please select a sensor first.";
     }
 }
+
+
+function updateAnalyticsView() {
+    const select = document.getElementById("analyticsSensor");
+    const aqiSection = document.getElementById("aqiAnalyticsSection");
+    const arduinoSection = document.getElementById("arduinoAnalyticsSection");
+
+    if (!select || !aqiSection || !arduinoSection) {
+        console.error("Analytics sections or sensor selector not found.");
+        return;
+    }
+
+    const isArduino = select.value.toLowerCase() === "arduino";
+
+    aqiSection.style.display = isArduino ? "none" : "";
+    arduinoSection.style.display = isArduino ? "" : "none";
+
+    if (!select.value) {
+        return;
+    }
+
+    if (isArduino) {
+        loadArduinoAnalytics();
+    } else {
+        loadAnalytics();
+    }
+}
+
+
+window.openAnalytics = function () {
+    const modal = document.getElementById("analyticsModal");
+    const select = document.getElementById("analyticsSensor");
+
+    if (!modal || !select) {
+        console.error(
+            "Analytics modal or analyticsSensor dropdown is missing."
+        );
+        return;
+    }
+
+    // Open the popup
+    modal.style.display = "flex";
+    document.body.style.overflow = "hidden";
+
+    // Remember the previously selected sensor
+    const previousSelection = select.value;
+
+    // Get available AirSense sensors
+    const sensors =
+        typeof dashboardData !== "undefined"
+            ? (dashboardData?.sensors || [])
+            : [];
+
+    // Rebuild the dropdown
+    select.innerHTML =
+        '<option value="">Select a sensor</option>';
+
+    sensors.forEach(sensor => {
+        const id = sensor.node_id || sensor.id;
+        if (!id) return;
+
+        const option = document.createElement("option");
+        option.value = id;
+        option.textContent = sensor.name || id;
+        select.appendChild(option);
+    });
+
+    // Add the Arduino weather station
+    const arduinoOption = document.createElement("option");
+    arduinoOption.value = "arduino";
+    arduinoOption.textContent = "Arduino Weather Station";
+    select.appendChild(arduinoOption);
+
+    // Restore the previous selection if it still exists
+    if (
+        previousSelection &&
+        [...select.options].some(option =>
+            option.value === previousSelection
+        )
+    ) {
+        select.value = previousSelection;
+    } else {
+        select.value = "";
+    }
+
+    // Update the popup when the selection changes
+    select.onchange = function () {
+        if (typeof updateAnalyticsView === "function") {
+            updateAnalyticsView();
+        }
+    };
+
+    if (typeof updateAnalyticsView === "function") {
+        updateAnalyticsView();
+    }
+};
 
 
 </script>
