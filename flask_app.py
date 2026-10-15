@@ -14,6 +14,8 @@ from backend.arduino_reader import arduino_reader
 import threading
 import time
 from backend.data_collection import SensorDataCollector
+from flask import request, jsonify
+from backend.aqi_calculator import calculate_particle_sub_indices
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -295,6 +297,40 @@ def get_analytics():
             'error': str(e)
         }), 500
     
+    
+@app.route("/api/aqi/sub-indices", methods=["POST"])
+def aqi_sub_indices():
+    """Calculate particulate sub-indices from supplied concentrations."""
+    data = request.get_json(silent=True) or {}
+
+    if "pm25" not in data or "pm10" not in data:
+        return jsonify({
+            "success": False,
+            "message": "Provide pm25 and pm10 concentrations in µg/m³."
+        }), 400
+
+    result = calculate_particle_sub_indices(
+        pm25=data["pm25"],
+        pm10=data["pm10"]
+    )
+
+    if (
+        result["pm25_sub_index"] is None
+        or result["pm10_sub_index"] is None
+    ):
+        return jsonify({
+            "success": False,
+            "message": "Concentrations must be valid, non-negative numbers."
+        }), 400
+
+    return jsonify({
+        "success": True,
+        "pm25_sub_index": result["pm25_sub_index"],
+        "pm10_sub_index": result["pm10_sub_index"],
+        "overall_aqi": None,
+        "status": "Experimental particulate sub-indices only"
+    })
+
 
 # ============= HISTORICAL ALERTS API =============
 

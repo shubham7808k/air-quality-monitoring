@@ -699,7 +699,7 @@
            POLLUTANTS
         ===================================================== */
 
-        .pollutant-grid {
+        -grid {
 
             display: grid;
 
@@ -849,7 +849,7 @@
             height: 35px;
 
             border-radius: 9px;
-
+.pollutant
             display: flex;
 
             align-items: center;
@@ -1907,22 +1907,60 @@ button {
     }
 }
 
-/* Very small phones */
-@media (max-width: 360px) {
-    .main {
-        padding-left: 9px;
-        padding-right: 9px;
-    }
+            .pollutant-grid {
 
-    .summary-grid,
-    .pollutant-grid {
-        grid-template-columns: minmax(0, 1fr);
-    }
+    display: grid;
 
-    .aqi-content {
-        align-items: flex-start;
-        flex-direction: column;
-    }
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 12px;
+
+    width: 100%;
+
+    max-width: 650px;
+
+    margin-left: auto;
+    margin-right: auto;
+
+    align-items: stretch;
+
+}
+
+.pollutant-card {
+
+    width: 100%;
+
+    min-width: 0;
+
+    box-sizing: border-box;
+
+    padding: 14px;
+
+}
+
+
+
+        @media(max-width:800px) {
+
+            .sidebar {
+
+                width: 70px;
+
+                padding:
+                    20px 10px;
+
+            }
+
+
+            .brand h2,
+            .brand span,
+            .nav-title,
+            .nav-item span {
+
+                display: none;
+
+            }
 }
 
 /* Respect reduced-motion preferences */
@@ -2771,6 +2809,44 @@ button {
 
                 </div>
 
+                
+<!-- Experimental particulate sub-indices -->
+<div class="pollutant-grid">
+    <div class="pollutant-card" id="aqi-subindex-card">
+
+        <div class="pollutant-header">
+            <span class="pollutant-name">
+                PM2.5 Sub-index
+            </span>
+            <span class="pollutant-value" id="pm25-sub-index">
+                --
+            </span>
+        </div>
+
+        <span class="pollutant-unit">
+            Experimental index
+        </span>
+
+        <div class="pollutant-header" style="margin-top: 18px;">
+            <span class="pollutant-name">
+                PM10 Sub-index
+            </span>
+            <span class="pollutant-value" id="pm10-sub-index">
+                --
+            </span>
+        </div>
+
+        <p id="aqi-status" style="margin-top: 15px;">
+            Waiting for validated PM measurements
+        </p>
+
+        <small>
+            Not the official overall AQI.
+        </small>
+
+    </div>
+</div>
+
 
                 <div class="pollutant-card">
 
@@ -3530,6 +3606,8 @@ console.log("AVAILABLE DATA KEYS:", Object.keys(data));
 
             updatePollutants(data);
 
+            await updateAQISubIndices();
+
             displayAlerts(data.alerts || []);
 
             displaySensors(data.sensors || []);
@@ -3774,6 +3852,25 @@ console.log("AVAILABLE DATA KEYS:", Object.keys(data));
 
     }
 
+    
+async function updateAQISubIndices() {
+    const pm25Element = document.getElementById("pm25-sub-index");
+    const pm10Element = document.getElementById("pm10-sub-index");
+    const statusElement = document.getElementById("aqi-status");
+
+    if (!pm25Element || !pm10Element || !statusElement) {
+        console.warn("AQI display elements are not in the HTML yet.");
+        return;
+    }
+
+    // Do not use raw Arduino ADC readings as PM concentrations.
+    pm25Element.textContent = "--";
+    pm10Element.textContent = "--";
+    statusElement.textContent =
+        "Waiting for validated PM2.5 and PM10 concentrations";
+}
+
+
 
 
     /* =====================================================
@@ -3800,48 +3897,73 @@ window.currentAirSenseSensors = Array.isArray(sensors)
 document.getElementById("sensor-count").textContent =
     window.currentAirSenseSensors.length;
 
-
 fetch("/api/arduino/latest")
     .then(response => response.json())
     .then(arduinoData => {
         const arduinoIsActive =
             arduinoData.connected === true &&
             arduinoData.latest !== null;
+            console.log("Arduino API response:", arduinoData);
+console.log("Arduino is active:", arduinoIsActive);
+console.log("Sensors grid found:", !!grid);
 
         document.getElementById("sensor-count").textContent =
-            sensors.length + (arduinoIsActive ? 1 : 0);
+            window.currentAirSenseSensors.length +
+            (arduinoIsActive ? 1 : 0);
+
+        if (arduinoIsActive) {
+            const reading = arduinoData.latest;
+
+            grid.insertAdjacentHTML("beforeend", `
+                <div class="sensor-card">
+                    <div class="sensor-header">
+                        <h3>Arduino Uno</h3>
+                        <span class="status-badge">Connected</span>
+                    </div>
+
+                    <div class="sensor-details">
+                        <p>
+                            <strong>Dust Raw:</strong>
+                            ${reading.dust_raw}
+                        </p>
+
+                        <p>
+                            <strong>Dust Voltage:</strong>
+                            ${Number(reading.dust_voltage).toFixed(3)} V
+                        </p>
+
+                        <p>
+                            <strong>MQ-135 Raw:</strong>
+                            ${reading.mq_raw}
+                        </p>
+
+                        <p>
+                            <strong>Last Updated:</strong>
+                            ${reading.timestamp || "--"}
+                        </p>
+                    </div>
+
+                    <small>
+                        Experimental raw readings — not official AQI.
+                    </small>
+                </div>
+            `);
+        }
     })
     .catch(error => {
         console.error("Arduino status check failed:", error);
     });
 
 
-
         if (!sensors.length) {
-
-            grid.innerHTML = `
-
-                <div class="empty">
-
-                    <div style="font-size:40px;">
-                        📡
-                    </div>
-
-                    <h3 style="margin:10px;">
-                        No Sensor Data
-                    </h3>
-
-                    <p>
-                        No active sensors were found.
-                    </p>
-
-                </div>
-
-            `;
-
-            return;
-
-        }
+    grid.innerHTML = `
+        <div class="empty" id="no-sensor-message">
+            <div style="font-size:40px;">📡</div>
+            <h3 style="margin:10px;">No Backend Sensor Data</h3>
+            <p>Checking for connected Arduino sensors...</p>
+        </div>
+    `;
+}
 
 
         sensors.forEach(sensor => {
@@ -4130,95 +4252,7 @@ async function loadArduinoSensorCard() {
         ? new Date(reading.timestamp).toLocaleTimeString()
         : "No reading received yet";
 
-    card.innerHTML = `
-        <div class="sensor-head">
-            <div>
-                <div class="sensor-name">
-                    🔌 Arduino Weather Sensor
-                </div>
-                <div class="sensor-location">
-                    Arduino Uno · Weather monitoring
-                </div>
-            </div>
-
-            <span class="sensor-status"
-                  style="color:${statusColor};">
-                ${statusText}
-            </span>
-        </div>
-
-        <div class="sensor-aqi">
-            <div style="font-size:32px;">🌦️</div>
-            <div>
-                <div style="font-weight:700;font-size:15px;">
-                    Weather Readings
-                </div>
-                <div class="sensor-category">
-                    Live Arduino measurements
-                </div>
-            </div>
-        </div>
-
-        <div class="measurement-grid">
-            <div class="measurement">
-                <div class="measurement-label">BMP180 Temperature</div>
-                <div class="measurement-value">
-                    ${displayValue(reading.temp_bmp)} °C
-                </div>
-            </div>
-
-            <div class="measurement">
-                <div class="measurement-label">DHT Temperature</div>
-                <div class="measurement-value">
-                    ${displayValue(reading.temp_dht)} °C
-                </div>
-            </div>
-
-            <div class="measurement">
-                <div class="measurement-label">Humidity</div>
-                <div class="measurement-value">
-                    ${displayValue(reading.humidity)} %
-                </div>
-            </div>
-
-            <div class="measurement">
-                <div class="measurement-label">Atmospheric Pressure</div>
-                <div class="measurement-value">
-                    ${displayValue(reading.pressure_hpa)} hPa
-                </div>
-            </div>
-
-            <div class="measurement">
-                <div class="measurement-label">Rain Status</div>
-                <div class="measurement-value">
-                    ${escapeHTML(reading.rain_status || "--")}
-                </div>
-            </div>
-
-            <div class="measurement">
-                <div class="measurement-label">Rain Sensor Raw Value</div>
-                <div class="measurement-value">
-                    ${displayValue(reading.rain_raw, 0)}
-                </div>
-            </div>
-        </div>
-
-        <div style="margin-top:12px;font-size:11px;color:var(--muted);">
-            ${
-                connected
-                    ? "Arduino data received successfully."
-                    : "Check USB connection, COM port and Serial Monitor."
-            }
-        </div>
-
-        <div class="sensor-footer">
-            <span style="color:${statusColor};">
-                ${connected ? "Arduino online" : "Arduino offline"}
-            </span>
-            <span>Updated ${escapeHTML(updated)}</span>
-        </div>
-    `;
-
+    
     grid.appendChild(card);
 }
 
