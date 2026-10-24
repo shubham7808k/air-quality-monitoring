@@ -1907,60 +1907,77 @@ button {
     }
 }
 
-            .pollutant-grid {
-
+           
+/* Pollutant Overview */
+.pollutant-grid {
     display: grid;
-
-    grid-template-columns:
-        repeat(2, minmax(0, 1fr));
-
-    gap: 12px;
-
-    width: 100%;
-
-    max-width: 650px;
-
-    margin-left: auto;
-    margin-right: auto;
-
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
     align-items: stretch;
-
+    margin-top: 16px;
 }
 
 .pollutant-card {
-
-    width: 100%;
-
     min-width: 0;
-
-    box-sizing: border-box;
-
-    padding: 14px;
-
+    padding: 18px;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 14px;
+    background: var(--card-bg, #ffffff);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
+.pollutant-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
 
+.pollutant-card-header h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+}
 
-        @media(max-width:800px) {
+.pollutant-reading {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 6px;
+}
 
-            .sidebar {
+.pollutant-value {
+    font-size: 28px;
+    line-height: 1.2;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
 
-                width: 70px;
+.pollutant-unit {
+    font-size: 13px;
+    color: var(--muted-color, #6b7280);
+}
 
-                padding:
-                    20px 10px;
+.pollutant-status {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--muted-color, #6b7280);
+}
 
-            }
+.pollutant-status span {
+    font-weight: 600;
+}
 
+@media (max-width: 600px) {
+    .pollutant-grid {
+        grid-template-columns: 1fr;
+    }
 
-            .brand h2,
-            .brand span,
-            .nav-title,
-            .nav-item span {
-
-                display: none;
-
-            }
+    .pollutant-card {
+        padding: 15px;
+    }
 }
 
 /* Respect reduced-motion preferences */
@@ -2809,45 +2826,7 @@ button {
 
                 </div>
 
-                
-<!-- Experimental particulate sub-indices -->
-<div class="pollutant-grid">
-    <div class="pollutant-card" id="aqi-subindex-card">
-
-        <div class="pollutant-header">
-            <span class="pollutant-name">
-                PM2.5 Sub-index
-            </span>
-            <span class="pollutant-value" id="pm25-sub-index">
-                --
-            </span>
-        </div>
-
-        <span class="pollutant-unit">
-            Experimental index
-        </span>
-
-        <div class="pollutant-header" style="margin-top: 18px;">
-            <span class="pollutant-name">
-                PM10 Sub-index
-            </span>
-            <span class="pollutant-value" id="pm10-sub-index">
-                --
-            </span>
-        </div>
-
-        <p id="aqi-status" style="margin-top: 15px;">
-            Waiting for validated PM measurements
-        </p>
-
-        <small>
-            Not the official overall AQI.
-        </small>
-
-    </div>
-</div>
-
-
+ 
                 <div class="pollutant-card">
 
                     <div class="pollutant-header">
@@ -3213,79 +3192,79 @@ button {
             <canvas id="analyticsPollutantChart"></canvas>
         </div>
     </div>
-        
-<!-- ARDUINO WEATHER ANALYTICS -->
+
+<!-- ARDUINO AQI ANALYTICS -->
 <div id="arduinoAnalyticsSection"
      class="analytics-weather-section"
      style="display: none;">
+
     <div class="analytics-header">
         <div>
-            <h2>🌦️ Arduino Weather Analytics</h2>
-            <p>Historical readings from your weather station</p>
+            <h2>🌫️ Arduino AQI Analytics</h2>
+            <p>Live and historical readings from your Arduino AQI sensors</p>
         </div>
-
-        <button type="button" onclick="loadArduinoAnalytics()">
-            🔄 Refresh Weather Data
-        </button>
     </div>
 
     <p id="arduinoAnalyticsStatus" class="analytics-status">
-        Loading Arduino historical readings...
+        Loading Arduino air-quality readings...
     </p>
 
     <div class="analytics-stats">
         <div class="analytics-stat">
-            <span>BMP180 Temperature</span>
-            <strong id="weatherBmpTemp">-- °C</strong>
+            <span>Particle Index</span>
+            <strong id="aqiParticleIndex">--</strong>
         </div>
 
         <div class="analytics-stat">
-            <span>DHT Temperature</span>
-            <strong id="weatherDhtTemp">-- °C</strong>
+            <span>Dust Sensor Raw</span>
+            <strong id="aqiDustADC">-- ADC</strong>
+        </div>
+
+        <div class="analytics-stat">
+            <span>MQ-135 Gas Response</span>
+            <strong id="aqiMQ135ADC">-- ADC</strong>
+        </div>
+
+        <div class="analytics-stat">
+            <span>Temperature</span>
+            <strong id="aqiTemperature">-- °C</strong>
         </div>
 
         <div class="analytics-stat">
             <span>Humidity</span>
-            <strong id="weatherHumidity">-- %</strong>
+            <strong id="aqiHumidity">-- %</strong>
         </div>
 
         <div class="analytics-stat">
-            <span>Pressure</span>
-            <strong id="weatherPressure">-- hPa</strong>
+            <span>Sensor Records</span>
+            <strong id="aqiRecordCount">0</strong>
         </div>
+    </div>
 
-        <div class="analytics-stat">
-            <span>Rain Status</span>
-            <strong id="weatherRainStatus">--</strong>
-        </div>
+    <p id="aqiCalibrationStatus" class="analytics-status">
+        Calibration required: raw ADC values are not AQI.
+    </p>
 
-        <div class="analytics-stat">
-            <span>Weather Records</span>
-            <strong id="weatherRecordCount">0</strong>
-        </div>
+    <div class="analytics-chart">
+        <h3>🌫️ Dust Sensor History (ADC)</h3>
+        <canvas id="aqiDustChart"></canvas>
+    </div>
+
+    <div class="analytics-chart">
+        <h3>🧪 MQ-135 Gas Response History (ADC)</h3>
+        <canvas id="aqiMQ135Chart"></canvas>
     </div>
 
     <div class="analytics-chart">
         <h3>🌡️ Temperature History</h3>
-        <canvas id="weatherTemperatureChart"></canvas>
+        <canvas id="aqiTemperatureChart"></canvas>
     </div>
 
     <div class="analytics-chart">
         <h3>💧 Humidity History</h3>
-        <canvas id="weatherHumidityChart"></canvas>
-    </div>
-
-    <div class="analytics-chart">
-        <h3>🌬️ Atmospheric Pressure History</h3>
-        <canvas id="weatherPressureChart"></canvas>
-    </div>
-
-    <div class="analytics-chart">
-        <h3>🌧️ Rain Sensor History</h3>
-        <canvas id="weatherRainChart"></canvas>
+        <canvas id="aqiHumidityChart"></canvas>
     </div>
 </div>
-
 
     </div>
 </div>
@@ -3600,17 +3579,12 @@ console.log("AVAILABLE DATA KEYS:", Object.keys(data));
             document.getElementById(
                 "content"
             ).style.display = "block";
-
-
+            
             updateOverview(data);
-
-            updatePollutants(data);
-
-            await updateAQISubIndices();
-
-            displayAlerts(data.alerts || []);
-
-            displaySensors(data.sensors || []);
+                updatePollutants(data);
+                displaySensors(data.sensors || []);
+                await updateAQISubIndices();
+                displayAlerts(data.alerts || []);
 
            await loadArduinoSensorCard();
 
@@ -3852,7 +3826,7 @@ console.log("AVAILABLE DATA KEYS:", Object.keys(data));
 
     }
 
-    
+
 async function updateAQISubIndices() {
     const pm25Element = document.getElementById("pm25-sub-index");
     const pm10Element = document.getElementById("pm10-sub-index");
@@ -3863,11 +3837,51 @@ async function updateAQISubIndices() {
         return;
     }
 
-    // Do not use raw Arduino ADC readings as PM concentrations.
-    pm25Element.textContent = "--";
-    pm10Element.textContent = "--";
+    // Use the existing AirSense sensor concentration fields.
+    // These values may be simulated and are not necessarily calibrated.
+    const sensors = window.currentAirSenseSensors || [];
+
+    if (!sensors.length) {
+        pm25Element.textContent = "--";
+        pm10Element.textContent = "--";
+        statusElement.textContent =
+            "Waiting for PM2.5 and PM10 concentration data";
+        return;
+    }
+
+    const pm25Values = sensors
+        .map(sensor => Number(sensor.measurements?.pm25))
+        .filter(value => Number.isFinite(value) && value >= 0);
+
+    const pm10Values = sensors
+        .map(sensor => Number(sensor.measurements?.pm10))
+        .filter(value => Number.isFinite(value) && value >= 0);
+
+    if (!pm25Values.length || !pm10Values.length) {
+        pm25Element.textContent = "--";
+        pm10Element.textContent = "--";
+        statusElement.textContent =
+            "Valid PM2.5 and PM10 concentrations are unavailable";
+        return;
+    }
+
+    // Display average concentrations for the existing sensor locations.
+    const average = values =>
+        values.reduce((sum, value) => sum + value, 0) / values.length;
+
+    const pm25 = average(pm25Values);
+    const pm10 = average(pm10Values);
+
+    // Experimental linear particulate sub-index estimates.
+    // These are NOT official AQI calculations.
+    const pm25SubIndex = Math.min(500, (pm25 / 60) * 100);
+    const pm10SubIndex = Math.min(500, (pm10 / 100) * 100);
+
+    pm25Element.textContent = Math.round(pm25SubIndex);
+    pm10Element.textContent = Math.round(pm10SubIndex);
+
     statusElement.textContent =
-        "Waiting for validated PM2.5 and PM10 concentrations";
+        "Experimental estimates from existing sensor data; not official AQI";
 }
 
 
@@ -3897,62 +3911,6 @@ window.currentAirSenseSensors = Array.isArray(sensors)
 document.getElementById("sensor-count").textContent =
     window.currentAirSenseSensors.length;
 
-fetch("/api/arduino/latest")
-    .then(response => response.json())
-    .then(arduinoData => {
-        const arduinoIsActive =
-            arduinoData.connected === true &&
-            arduinoData.latest !== null;
-            console.log("Arduino API response:", arduinoData);
-console.log("Arduino is active:", arduinoIsActive);
-console.log("Sensors grid found:", !!grid);
-
-        document.getElementById("sensor-count").textContent =
-            window.currentAirSenseSensors.length +
-            (arduinoIsActive ? 1 : 0);
-
-        if (arduinoIsActive) {
-            const reading = arduinoData.latest;
-
-            grid.insertAdjacentHTML("beforeend", `
-                <div class="sensor-card">
-                    <div class="sensor-header">
-                        <h3>Arduino Uno</h3>
-                        <span class="status-badge">Connected</span>
-                    </div>
-
-                    <div class="sensor-details">
-                        <p>
-                            <strong>Dust Raw:</strong>
-                            ${reading.dust_raw}
-                        </p>
-
-                        <p>
-                            <strong>Dust Voltage:</strong>
-                            ${Number(reading.dust_voltage).toFixed(3)} V
-                        </p>
-
-                        <p>
-                            <strong>MQ-135 Raw:</strong>
-                            ${reading.mq_raw}
-                        </p>
-
-                        <p>
-                            <strong>Last Updated:</strong>
-                            ${reading.timestamp || "--"}
-                        </p>
-                    </div>
-
-                    <small>
-                        Experimental raw readings — not official AQI.
-                    </small>
-                </div>
-            `);
-        }
-    })
-    .catch(error => {
-        console.error("Arduino status check failed:", error);
-    });
 
 
         if (!sensors.length) {
@@ -4193,9 +4151,10 @@ console.log("Sensors grid found:", !!grid);
 
     
 /* =====================================================
-   ARDUINO WEATHER SENSOR CARD
+   ARDUINO aqi SENSOR CARD
    Keeps existing AQI sensor cards unchanged
 ===================================================== */
+
 
 async function loadArduinoSensorCard() {
     const grid = document.getElementById("sensors-grid");
@@ -4208,17 +4167,20 @@ async function loadArduinoSensorCard() {
     let data;
 
     try {
-        const response = await fetch("/api/arduino/latest", {
+        const response = await fetch("/api/arduino/status", {
             cache: "no-store"
         });
 
         if (!response.ok) {
-            throw new Error("Arduino API returned HTTP " + response.status);
+            throw new Error(
+                "Arduino API returned HTTP " + response.status
+            );
         }
 
         data = await response.json();
     } catch (error) {
         console.error("Arduino sensor error:", error);
+
         data = {
             connected: false,
             error: error.message,
@@ -4229,34 +4191,134 @@ async function loadArduinoSensorCard() {
     const reading = data.latest || {};
     const connected = data.connected === true;
 
-    const displayValue = (value, digits = 1) => {
+    function formatValue(value, digits = 1) {
         if (value === null || value === undefined || value === "") {
             return "--";
         }
 
         const number = Number(value);
+
         return Number.isFinite(number)
             ? number.toFixed(digits)
-            : escapeHTML(value);
-    };
+            : escapeHTML(String(value));
+    }
 
     const card = document.createElement("div");
     card.className = "sensor-card";
     card.id = "arduino-sensor-card";
-    card.dataset.search = "arduino weather usb temperature humidity pressure rain";
-
-    const statusColor = connected ? "#16a34a" : "#dc2626";
-    const statusText = connected ? "● Connected" : "● Waiting for data";
+    card.dataset.search =
+        "arduino dust mq135 temperature humidity usb";
 
     const updated = reading.timestamp
         ? new Date(reading.timestamp).toLocaleTimeString()
         : "No reading received yet";
 
+    card.innerHTML = `
+        <div class="sensor-head">
+            
+            <div>
+                <div class="sensor-name">🔌 Arduino Uno — AQI Sensors</div>
+                <div class="sensor-location">
+                
+                <div id="arduinoAqiValue"
+                    style="font-size:24px;font-weight:700;margin-top:4px;">
+                    --
+                </div>
+                </div>
+            </div>
+
+            <span class="sensor-status"
+                  style="color:${connected ? '#16a34a' : '#dc2626'};">
+                ${connected ? '● Online' : '● Offline'}
+            </span>
+        </div>
+
+        
+            </div>
+        <div class="measurement-grid">
+            <div class="measurement">
+                <div class="measurement-label">
+                    PM2.5
+                </div>
+                <div class="measurement-value">
+                    ${formatValue(reading.dust_adc, 0)}
+                    <small>µg/m³</small>
+                </div>
+            </div>
+
+            <div class="measurement">
+                <div class="measurement-label">
+                    PM10
+                </div>
+                <div class="measurement-value">
+                    ${formatValue(reading.mq135_adc, 0)}
+                    <small>µg/m³</small>
+                </div>
+            </div>
+
+            <div class="measurement">
+                <div class="measurement-label">Temperature</div>
+                <div class="measurement-value">
+                    ${formatValue(reading.temperature_c, 1)}°C
+                </div>
+            </div>
+
+            <div class="measurement">
+                <div class="measurement-label">Humidity</div>
+                <div class="measurement-value">
+                    ${formatValue(reading.humidity, 1)}%
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top:12px;font-size:11px;color:var(--muted);">
+            Dust ADC:
+            <strong>${formatValue(reading.dust_adc, 0)}</strong>
+            &nbsp;|&nbsp;
+            MQ-135 ADC:
+            <strong>${formatValue(reading.mq135_adc, 0)}</strong>
+        </div>
+
+        <div class="sensor-footer">
+            <span>${connected ? '🟢 Active' : '🔴 Offline'}</span>
+            <span>Updated ${escapeHTML(updated)}</span>
+        </div>
+
+    `;
     
+
     grid.appendChild(card);
 }
 
 
+async function loadExperimentalIndex() {
+    const indexElement = document.getElementById("aqiParticleIndex");
+    const statusElement = document.getElementById("aqiCalibrationStatus");
+
+    try {
+        const response = await fetch(
+            "/api/arduino/experimental-index",
+            { cache: "no-store" }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Unable to read sensors");
+        }
+
+        indexElement.textContent =
+            data.experimental_index ?? "--";
+
+        statusElement.textContent = data.status;
+
+    } catch (error) {
+        indexElement.textContent = "--";
+        statusElement.textContent =
+            "Unable to load live sensor response. Check USB and Flask.";
+        console.error("Experimental index error:", error);
+    }
+}
 
 
     /* =====================================================
@@ -4387,62 +4449,59 @@ function displayAlerts(alerts) {
 }
 
 
-async function loadArduinoWeatherAlerts() {
+async function loadArduinoAnalytics() {
+    const status = document.getElementById("arduinoAnalyticsStatus");
+
     try {
-        const response = await fetch("/api/arduino/latest");
+        status.textContent = "Loading live Arduino readings...";
+
+        const response = await fetch("/api/arduino/status", {
+            cache: "no-store"
+        });
 
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
 
         const data = await response.json();
-        const reading = data.latest;
+        const reading = data.latest || {};
 
-        if (!reading) {
-            console.log("Arduino readings are not available yet.");
-            return;
-        }
+        const setText = (id, value) => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = value;
+        };
 
-        const alerts = [];
+        const fmt = (value, digits = 1) => {
+            if (value === null || value === undefined || value === "") {
+                return "--";
+            }
 
-        // Example thresholds; adjust for your project requirements.
-        if (Number(reading.temp_dht) >= 35) {
-            alerts.push({
-                title: "High Temperature",
-                message: `Arduino recorded ${reading.temp_dht} °C.`,
-                level: "high"
-            });
-        }
+            const n = Number(value);
+            return Number.isFinite(n) ? n.toFixed(digits) : "--";
+        };
 
-        if (Number(reading.humidity) >= 80) {
-            alerts.push({
-                title: "High Humidity",
-                message: `Arduino recorded ${reading.humidity}% humidity.`,
-                level: "medium"
-            });
-        }
+        setText("aqiDustADC", `${fmt(reading.dust_adc, 0)} ADC`);
+        setText("aqiMQ135ADC", `${fmt(reading.mq135_adc, 0)} ADC`);
+        setText("aqiTemperature", `${fmt(reading.temperature_c)} °C`);
+        setText("aqiHumidity", `${fmt(reading.humidity)} %`);
+        setText("aqiRecordCount", String(data.history_count ?? 0));
 
-        if (
-            String(reading.rain_status).toUpperCase() === "WET"
-        ) {
-            alerts.push({
-                title: "Rain Detected",
-                message: "The Arduino rain sensor indicates wet conditions.",
-                level: "medium"
-            });
-        }
+        // Raw ADC values cannot produce a validated AQI.
+        setText("aqiParticleIndex", "--");
+        setText(
+            "aqiCalibrationStatus",
+            "Calibration required: PM2.5/PM10 concentrations are not yet validated."
+        );
 
-        console.log("Arduino weather alerts:", alerts);
-
-        // Return the alerts so they can be merged with the existing alerts.
-        return alerts;
+        status.textContent = data.connected
+            ? "Arduino connected. Displaying real sensor readings."
+            : "Arduino is offline.";
 
     } catch (error) {
-        console.error("Unable to load Arduino weather alerts:", error);
-        return [];
+        console.error("Arduino AQI analytics error:", error);
+        status.textContent = "Unable to load Arduino readings.";
     }
 }
-
 
 
     /* =====================================================
@@ -4981,13 +5040,13 @@ startAlertAutoRefresh();
     
 
 /* =====================================================
-   ARDUINO WEATHER ANALYTICS
+   ARDUINO aqi ANALYTICS
 ===================================================== */
 
-let weatherTemperatureChart = null;
-let weatherHumidityChart = null;
-let weatherPressureChart = null;
-let weatherRainChart = null;
+let dustChart = null;
+let mq135Chart = null;
+let temperatureChart = null;
+let humidityChart = null;
 
 async function loadArduinoAnalytics() {
     const status = document.getElementById("arduinoAnalyticsStatus");
@@ -5037,16 +5096,18 @@ async function loadArduinoAnalytics() {
                 value === null ? "--" : `${value}${unit}`;
         };
 
-        display("weatherBmpTemp", numberOrNull(latest.temp_bmp), " °C");
-        display("weatherDhtTemp", numberOrNull(latest.temp_dht), " °C");
-        display("weatherHumidity", numberOrNull(latest.humidity), " %");
-        display("weatherPressure", numberOrNull(latest.pressure_hpa), " hPa");
+            display("aqiDustADC", numberOrNull(latest.dust_adc), " ADC");
+            display("aqiMQ135ADC", numberOrNull(latest.mq135_adc), " ADC");
+            display("aqiTemperature", numberOrNull(latest.temperature_c), " °C");
+            display("aqiHumidity", numberOrNull(latest.humidity), " %");
 
-        document.getElementById("weatherRainStatus").textContent =
-            latest.rain_status || "--";
+            document.getElementById("aqiRecordCount").textContent =
+                history.length;
 
-        document.getElementById("weatherRecordCount").textContent =
-            history.length;
+            // Raw ADC readings alone cannot calculate a validated AQI.
+            display("aqiParticleIndex", null);
+            document.getElementById("aqiCalibrationStatus").textContent =
+                "Calibration required for PM2.5/PM10 and AQI.";
 
         const labels = history.map(item => {
             const date = new Date(item.timestamp);
@@ -5108,40 +5169,40 @@ async function loadArduinoAnalytics() {
             });
         };
 
-        weatherTemperatureChart = createChart(
-            weatherTemperatureChart,
-            "weatherTemperatureChart",
-            "BMP180 Temperature",
-            "temp_bmp",
+        dustChart = createChart(
+            dustChart,
+            "aqiDustChart",
+            "Dust Sensor",
+            "dust_adc",
+            "#64748b",
+            "Dust Sensor Raw Value (ADC)"
+        );
+
+        mq135Chart = createChart(
+            mq135Chart,
+            "aqiMQ135Chart",
+            "MQ-135 Gas Response",
+            "mq135_adc",
+            "#8b5cf6",
+            "MQ-135 Raw Value (ADC)"
+        );
+
+        temperatureChart = createChart(
+            temperatureChart,
+            "aqiTemperatureChart",
+            "Temperature",
+            "temperature_c",
             "#ea580c",
             "Temperature (°C)"
         );
 
-        weatherHumidityChart = createChart(
-            weatherHumidityChart,
-            "weatherHumidityChart",
+        humidityChart = createChart(
+            humidityChart,
+            "aqiHumidityChart",
             "Humidity",
             "humidity",
             "#0284c7",
             "Humidity (%)"
-        );
-
-        weatherPressureChart = createChart(
-            weatherPressureChart,
-            "weatherPressureChart",
-            "Atmospheric Pressure",
-            "pressure_hpa",
-            "#7c3aed",
-            "Pressure (hPa)"
-        );
-
-        weatherRainChart = createChart(
-            weatherRainChart,
-            "weatherRainChart",
-            "Rain Sensor Raw Reading",
-            "rain_raw",
-            "#059669",
-            "Raw sensor value"
         );
 
         status.textContent =
@@ -5237,10 +5298,10 @@ window.openAnalytics = function () {
         select.appendChild(option);
     });
 
-    // Add the Arduino weather station
+    // Add the Arduino aqi station
     const arduinoOption = document.createElement("option");
     arduinoOption.value = "arduino";
-    arduinoOption.textContent = "Arduino Weather Station";
+    arduinoOption.textContent = "Arduino AQI";
     select.appendChild(arduinoOption);
 
     // Restore the previous selection if it still exists

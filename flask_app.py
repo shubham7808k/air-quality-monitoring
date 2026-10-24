@@ -15,7 +15,7 @@ import threading
 import time
 from backend.data_collection import SensorDataCollector
 from flask import request, jsonify
-from backend.aqi_calculator import calculate_particle_sub_indices
+from backend.arduino_aqi import process_sensor_data
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -24,6 +24,10 @@ logger = logging.getLogger(__name__)
 # Initialize Flask app
 app = Flask(__name__)
 CORS(app)
+# Arduino sensor status API
+@app.route("/api/arduino/status", methods=["GET"])
+def arduino_status():
+    return jsonify(arduino_reader.snapshot())
 
 # Initialize managers
 db = DatabaseManager()
@@ -70,6 +74,40 @@ def update_sensor_data():
 
         time.sleep(60)
 
+# ============= calculated aqi function =============
+
+@app.route("/api/arduino/aqi")
+def arduino_aqi_api():
+    from flask import jsonify
+
+    # Reuse the existing Arduino status route.
+    status_response = app.make_response(
+        app.view_functions["arduino_status"]()
+    )
+
+    if status_response.status_code >= 400:
+        return jsonify({
+            "error": "Unable to retrieve Arduino readings"
+        }), 502
+
+    try:
+        sensor_data = status_response.get_json()
+    except Exception:
+        return jsonify({
+            "error": "Invalid Arduino status response"
+        }), 502
+
+    if not isinstance(sensor_data, dict):
+        return jsonify({"error": "Invalid sensor data"}), 502
+
+    latest = sensor_data.get("latest") or {}
+
+    latest["connected"] = sensor_data.get("connected", False)
+
+    result = process_sensor_data(latest)
+
+    return jsonify(result)
+
 
 # ============= HELPER FUNCTIONS =============
 
@@ -105,8 +143,10 @@ def get_dashboard_data():
             'timestamp': datetime.now(timezone.utc).isoformat(),
             'sensors': [],
             'overall_status': {},
-            'alerts': []
-        }
+            'alerts': [],
+            'arduino': arduino_reader.snapshot()
+            }
+
         
         aqi_values = []
         
@@ -489,16 +529,56 @@ def arduino_latest():
 
 @app.route("/api/arduino/history")
 def arduino_history():
-    arduino_reader.start()
-    return jsonify(arduino_reader.get_history())
+    try:
+        arduino_reader.start()
+
+        history = arduino_reader.get_history()
+
+        if history is None:
+            history = []
+
+        return jsonify({
+            "success": True,
+            "count": len(history),
+            "history": history
+        })
+
+    except Exception:
+        app.logger.exception("Failed to load Arduino history")
+        return jsonify({
+            "success": False,
+            "error": "Unable to retrieve Arduino history"
+        }), 500
 
 
-@app.route("/arduino-weather")
-def arduino_weather_page():
-    return render_template("arduino_weather.html")
+@app.route("/api/arduino/experimental-index")
+def arduino_experimental_index():
+    try:
+        # Reuse the existing Arduino status endpoint.
+        status_response = app.make_response(
+            app.view_functions["arduino_status"]()
+        )
 
+        data = status_response.get_json(silent=True)
 
-# ============= MAIN =============
+        if status_response.status_code >= 400 or not isinstance(data, dict):
+            return jsonify({
+                "error": "Unable to retrieve Arduino sensor readings"
+            }), 502
+
+        latest = data.get("latest") or {}
+        result = process_sensor_data(latest)
+
+        result["connected"] = bool(data.get("connected", False))
+        result["timestamp"] = latest.get("timestamp")
+
+        return jsonify(result)
+
+    except Exception:
+        app.logger.exception("Experimental sensor index failed")
+        return jsonify({
+            "error": "Unable to calculate experimental index"
+        }), 500
 
 
 # ============= MAIN =============
@@ -511,6 +591,10 @@ if __name__ == '__main__':
     print("✓ API available at: http://localhost:5000/api/*")
     print("✓ Automatic sensor updates: every 60 seconds")
     print("\nPress Ctrl+C to stop\n")
+
+    # Start Arduino USB sensor reader
+    arduino_reader.start()
+    print("✓ Arduino sensor reader started")
 
     # Start automatic sensor updates in the background
     updater = threading.Thread(

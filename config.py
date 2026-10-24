@@ -142,5 +142,5 @@ LOG_FILE = os.path.join(BASE_DIR, 'logs', 'system.log')
 
 os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
 
-ARDUINO_SERIAL_PORT = "COM11"
+ARDUINO_SERIAL_PORT = "COM13"
 ARDUINO_BAUD_RATE = 9600

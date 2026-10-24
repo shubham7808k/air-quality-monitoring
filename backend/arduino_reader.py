@@ -1,4 +1,6 @@
 
+import json
+import math
 import threading
 import time
 from collections import deque
@@ -19,31 +21,52 @@ class ArduinoSerialReader:
         self.running = False
         self.thread = None
 
+    @staticmethod
+    def to_float(value):
+        """Convert a sensor value to a finite float."""
+        number = float(value)
+
+        if not math.isfinite(number):
+            raise ValueError("Sensor value must be finite")
+
+        return number
+
     def parse_line(self, line):
-        parts = line.strip().split(",")
-
-        # Arduino sends: dustRaw,dustVoltage,mqRaw
-        if len(parts) != 3:
-            return None
-
+        """Parse one JSON reading received from Arduino."""
         try:
-            dust_raw = int(parts[0])
-            dust_voltage = float(parts[1])
-            mq_raw = int(parts[2])
-        except (ValueError, TypeError):
-            return None
+            data = json.loads(line.strip())
 
-        return {
-            "timestamp": datetime.now().astimezone().isoformat(
-                timespec="seconds"
-            ),
-            "dust_raw": dust_raw,
-            "dust_voltage": dust_voltage,
-            "mq_raw": mq_raw,
-            "source": "arduino"
-        }
+            required = (
+                "dust_adc",
+                "mq135_adc",
+                "temperature_c",
+                "humidity",
+            )
+
+            if not isinstance(data, dict):
+                return None
+
+            if not all(key in data for key in required):
+                return None
+
+            reading = {
+                "timestamp": datetime.now().astimezone().isoformat(
+                    timespec="seconds"
+                ),
+                "dust_adc": self.to_float(data["dust_adc"]),
+                "mq135_adc": self.to_float(data["mq135_adc"]),
+                "temperature_c": self.to_float(data["temperature_c"]),
+                "humidity": self.to_float(data["humidity"]),
+                "source": "arduino",
+            }
+
+            return reading
+
+        except (json.JSONDecodeError, TypeError, ValueError):
+            return None
 
     def start(self):
+        """Start the background serial-reading thread."""
         with self.lock:
             if self.running:
                 return
@@ -51,23 +74,32 @@ class ArduinoSerialReader:
             self.running = True
             self.thread = threading.Thread(
                 target=self._read_loop,
-                daemon=True
+                daemon=True,
+                name="ArduinoSerialReader",
             )
             self.thread.start()
 
     def _read_loop(self):
+        """Continuously read sensor data from the Arduino USB port."""
         while self.running:
             try:
                 with serial.Serial(
                     ARDUINO_SERIAL_PORT,
                     ARDUINO_BAUD_RATE,
-                    timeout=1
+                    timeout=1,
                 ) as connection:
-                    with self.lock:
-                        self.error = None
+
+                    # Allow the Arduino to reset after serial connection.
+                    time.sleep(2)
+                    connection.reset_input_buffer()
 
                     while self.running:
-                        line = connection.readline().decode(
+                        raw_line = connection.readline()
+
+                        if not raw_line:
+                            continue
+
+                        line = raw_line.decode(
                             "utf-8", errors="ignore"
                         ).strip()
 
@@ -82,15 +114,18 @@ class ArduinoSerialReader:
                         with self.lock:
                             self.latest = reading
                             self.history.append(reading)
+                            self.error = None
 
             except (SerialException, OSError) as exc:
                 with self.lock:
                     self.error = (
                         f"Cannot read {ARDUINO_SERIAL_PORT}: {exc}"
                     )
+
                 time.sleep(3)
 
     def snapshot(self):
+        """Return the latest reading and connection status."""
         with self.lock:
             latest = self.latest.copy() if self.latest else None
             history_count = len(self.history)
@@ -102,10 +137,11 @@ class ArduinoSerialReader:
             "connected": connected,
             "error": error,
             "latest": latest,
-            "history_count": history_count
+            "history_count": history_count,
         }
 
     def get_history(self):
+        """Return stored sensor readings."""
         with self.lock:
             return list(self.history)
 

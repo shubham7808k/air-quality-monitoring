@@ -2,7 +2,7 @@
 import serial
 import time
 
-PORT = "COM11"
+PORT = "COM13"
 BAUD_RATE = 9600
 
 try:
