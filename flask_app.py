@@ -554,22 +554,51 @@ def arduino_history():
 @app.route("/api/arduino/experimental-index")
 def arduino_experimental_index():
     try:
-        # Reuse the existing Arduino status endpoint.
-        status_response = app.make_response(
-            app.view_functions["arduino_status"]()
-        )
+        response = app.view_functions["arduino_status"]()
 
-        data = status_response.get_json(silent=True)
+        # Handle Flask response, (response, status_code), or dict
+        if isinstance(response, tuple):
+            response = response[0]
 
-        if status_response.status_code >= 400 or not isinstance(data, dict):
+        if isinstance(response, dict):
+            data = response
+        else:
+            response = app.make_response(response)
+            data = response.get_json(silent=True)
+
+            if response.status_code >= 400:
+                return jsonify({
+                    "aqi": None,
+                    "error": "Unable to retrieve Arduino readings"
+                }), 502
+
+        if not isinstance(data, dict):
             return jsonify({
-                "error": "Unable to retrieve Arduino sensor readings"
+                "aqi": None,
+                "error": "Invalid Arduino status response"
             }), 502
 
         latest = data.get("latest") or {}
-        result = process_sensor_data(latest)
 
-        result["connected"] = bool(data.get("connected", False))
+        if not data.get("connected"):
+            return jsonify({
+                "aqi": None,
+                "connected": False,
+                "status": "Arduino disconnected"
+            }), 503
+
+        if "dust_adc" not in latest or "mq135_adc" not in latest:
+            app.logger.error("Unexpected Arduino data: %s", data)
+            return jsonify({
+                "aqi": None,
+                "connected": True,
+                "status": "Invalid sensor data",
+                "error": "Required sensor fields are missing",
+                "received_data": latest
+            }), 422
+
+        result = process_sensor_data(latest)
+        result["connected"] = True
         result["timestamp"] = latest.get("timestamp")
 
         return jsonify(result)
@@ -577,6 +606,7 @@ def arduino_experimental_index():
     except Exception:
         app.logger.exception("Experimental sensor index failed")
         return jsonify({
+            "aqi": None,
             "error": "Unable to calculate experimental index"
         }), 500
 

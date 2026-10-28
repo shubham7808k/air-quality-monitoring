@@ -1,88 +1,86 @@
 
-def calculate_sub_index(concentration, breakpoints):
-    """Calculate an AQI sub-index from a calibrated concentration."""
-    if concentration is None or concentration < 0:
-        return None
+"""
+arduino_aqi.py
 
-    for c_low, c_high, i_low, i_high in breakpoints:
-        if c_low <= concentration <= c_high:
-            return round(
-                ((i_high - i_low) / (c_high - c_low))
-                * (concentration - c_low)
-                + i_low
-            )
-
-    return None
-
-
-PM25_BREAKPOINTS = [
-    (0, 30, 0, 50),
-    (30, 60, 50, 100),
-    (60, 90, 100, 200),
-    (90, 120, 200, 300),
-    (120, 250, 300, 400),
-    (250, 500, 400, 500),
-]
-
-PM10_BREAKPOINTS = [
-    (0, 50, 0, 50),
-    (50, 100, 50, 100),
-    (100, 250, 100, 200),
-    (250, 350, 200, 300),
-    (350, 430, 300, 400),
-    (430, 600, 400, 500),
-]
-
-
-def calculate_particle_aqi(pm25=None, pm10=None):
-    pm25_index = calculate_sub_index(pm25, PM25_BREAKPOINTS)
-    pm10_index = calculate_sub_index(pm10, PM10_BREAKPOINTS)
-
-    available = [
-        value for value in (pm25_index, pm10_index)
-        if value is not None
-    ]
-
-    return {
-        "particle_index": max(available) if available else None,
-        "pm25_index": pm25_index,
-        "pm10_index": pm10_index,
-        "is_official_aqi": False,
-        "status": (
-            "Experimental particle index"
-            if available else "Calibration required"
-        ),
-    }
+GP2Y1010AU0F: uncalibrated dust concentration estimate.
+MQ-135: raw gas sensor reading, not PM10.
+Not an official CPCB AQI calculation.
+"""
 
 
 def process_sensor_data(sensor_data):
-    """Return one experimental index from live sensor ADC readings."""
-
-    if not isinstance(sensor_data, dict):
-        sensor_data = {}
-
     try:
-        dust = int(sensor_data["dust_adc"])
-        gas = int(sensor_data["mq135_adc"])
+        dust_adc = float(sensor_data["dust_adc"])
+        mq135_adc = float(sensor_data["mq135_adc"])
 
-        if not (0 <= dust <= 1023 and 0 <= gas <= 1023):
-            raise ValueError("ADC values out of range")
+        if not 0 <= dust_adc <= 1023:
+            raise ValueError("Invalid dust ADC reading")
 
-    except (KeyError, TypeError, ValueError):
+        if not 0 <= mq135_adc <= 1023:
+            raise ValueError("Invalid MQ-135 ADC reading")
+
+        # GP2Y1010AU0F dust sensor conversion.
+        # Assumes 5 V analog reference.
+        dust_voltage = dust_adc * 5.0 / 1023.0
+
+        # Typical approximate sensor baseline and sensitivity.
+        dust_mg_m3 = max(
+            0.0,
+            (dust_voltage - 0.9) / 5.0
+        )
+
+        pm25_estimate = dust_mg_m3 * 1000.0
+
+        # MQ-135 is a gas sensor; do not label this as PM10.
+        gas_adc = round(mq135_adc, 1)
+
+        # Experimental combined index; NOT official AQI.
+        dust_index = dust_adc / 1023.0 * 100
+        gas_index = mq135_adc / 1023.0 * 100
+        experimental_index = round((dust_index + gas_index) / 2)
+
+        if experimental_index <= 20:
+            status = "Low sensor index"
+        elif experimental_index <= 40:
+            status = "Moderate sensor index"
+        elif experimental_index <= 60:
+            status = "Elevated sensor index"
+        elif experimental_index <= 80:
+            status = "High sensor index"
+        else:
+            status = "Very high sensor index"
+
         return {
-            "aqi": None,
-            "status": "Waiting for valid sensor readings",
-            "is_official_aqi": False
+            "aqi": experimental_index,
+            "status": status,
+            "dust_adc": round(dust_adc, 1),
+            "dust_voltage": round(dust_voltage, 3),
+            "pm25_estimate_ug_m3": round(pm25_estimate, 1),
+            "mq135_adc": gas_adc,
+            "gas_sensor_value": gas_adc,
+            "temperature_c": sensor_data.get("temperature_c"),
+            "humidity": sensor_data.get("humidity"),
+            "calculation": (
+                "Experimental index, not official CPCB AQI. "
+                "PM2.5 is an uncalibrated dust estimate. "
+                "MQ-135 does not measure PM10."
+            )
         }
 
-    # Experimental normalized response, NOT official AQI.
-    dust_percent = dust / 1023 * 100
-    gas_percent = gas / 1023 * 100
+    except (KeyError, TypeError, ValueError) as error:
+        return {
+            "aqi": None,
+            "status": "Invalid sensor data",
+            "error": str(error)
+        }
 
-    single_value = round((dust_percent + gas_percent) / 2)
 
-    return {
-        "aqi": single_value,
-        "status": "Experimental sensor index — not official AQI",
-        "is_official_aqi": False
+if __name__ == "__main__":
+    sample_data = {
+        "dust_adc": 230,
+        "mq135_adc": 99,
+        "temperature_c": 26.7,
+        "humidity": 63.9
     }
+
+    print(process_sensor_data(sample_data))

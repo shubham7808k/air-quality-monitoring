@@ -857,16 +857,11 @@
             justify-content: center;
 
         }
-
-
         .critical {
 
             background:
                 #fef2f2;
-
         }
-
-
         .critical .alert-icon {
 
             background:
@@ -3216,13 +3211,13 @@ button {
         </div>
 
         <div class="analytics-stat">
-            <span>Dust Sensor Raw</span>
-            <strong id="aqiDustADC">-- ADC</strong>
+            <span>PM2.5</span>
+            <strong id="aqiDustADC">-- µg/m³</strong>
         </div>
 
         <div class="analytics-stat">
-            <span>MQ-135 Gas Response</span>
-            <strong id="aqiMQ135ADC">-- ADC</strong>
+            <span>PM10</span>
+            <strong id="aqiMQ135ADC">-- µg/m³</strong>
         </div>
 
         <div class="analytics-stat">
@@ -3246,12 +3241,12 @@ button {
     </p>
 
     <div class="analytics-chart">
-        <h3>🌫️ Dust Sensor History (ADC)</h3>
+        <h3>PM 2.5</h3>
         <canvas id="aqiDustChart"></canvas>
     </div>
 
     <div class="analytics-chart">
-        <h3>🧪 MQ-135 Gas Response History (ADC)</h3>
+        <h3>PM 10</h3>
         <canvas id="aqiMQ135Chart"></canvas>
     </div>
 
@@ -3908,8 +3903,23 @@ window.currentAirSenseSensors = Array.isArray(sensors)
     : [];
 
 // Count existing AirSense sensors for now
-document.getElementById("sensor-count").textContent =
-    window.currentAirSenseSensors.length;
+
+function updateSensorCount() {
+    const countElement = document.getElementById("sensor-count");
+
+    if (!countElement) return;
+
+    const existingCount = (
+        window.currentAirSenseSensors || []
+    ).length;
+
+    const arduinoCount = window.arduinoConnected === true ? 1 : 0;
+
+    countElement.textContent = existingCount + arduinoCount;
+}
+
+// Update the count now.
+updateSensorCount();
 
 
 
@@ -4160,39 +4170,82 @@ async function loadArduinoSensorCard() {
     const grid = document.getElementById("sensors-grid");
     if (!grid) return;
 
-    // Remove only the previous Arduino card.
+    // Remove the previous Arduino card to prevent duplicates.
     const oldCard = document.getElementById("arduino-sensor-card");
     if (oldCard) oldCard.remove();
 
-    let data;
+    let data = {
+        connected: false,
+        latest: null
+    };
 
+    let aqiData = {
+        aqi: null,
+        status: "Waiting for calculation"
+    };
+
+    // Get live Arduino readings.
     try {
         const response = await fetch("/api/arduino/status", {
             cache: "no-store"
         });
 
         if (!response.ok) {
-            throw new Error(
-                "Arduino API returned HTTP " + response.status
-            );
+            throw new Error("Arduino API returned HTTP " + response.status);
         }
 
         data = await response.json();
     } catch (error) {
         console.error("Arduino sensor error:", error);
-
-        data = {
-            connected: false,
-            error: error.message,
-            latest: null
-        };
     }
 
-    const reading = data.latest || {};
-    const connected = data.connected === true;
+    // Get the calculated experimental index.
+    try {
+        const response = await fetch("/api/arduino/experimental-index", {
+            cache: "no-store"
+        });
+
+        if (!response.ok) {
+            throw new Error("AQI API returned HTTP " + response.status);
+        }
+
+        aqiData = await response.json();
+    } catch (error) {
+        console.error("Arduino index error:", error);
+    }
+
+    
+const connected = data.connected === true;
+
+// Only use live readings when Arduino is connected.
+const reading = connected ? (data.latest || {}) : {};
+
+// Do not show the calculated index when disconnected.
+if (!connected) {
+    aqiData.aqi = null;
+    aqiData.status = "Waiting for Arduino connection";
+}
+
+    // Store Arduino connection status for the sensor count.
+window.arduinoConnected = connected;
+// Refresh the sensor count.
+const countElement = document.getElementById("sensor-count");
+
+if (countElement) {
+    const existingCount = (
+        window.currentAirSenseSensors || []
+    ).length;
+
+    countElement.textContent =
+        existingCount + (connected ? 1 : 0);
+}
 
     function formatValue(value, digits = 1) {
-        if (value === null || value === undefined || value === "") {
+        if (
+            value === null ||
+            value === undefined ||
+            value === ""
+        ) {
             return "--";
         }
 
@@ -4202,6 +4255,31 @@ async function loadArduinoSensorCard() {
             ? number.toFixed(digits)
             : escapeHTML(String(value));
     }
+
+    const hasIndex =
+        aqiData.aqi !== null &&
+        aqiData.aqi !== undefined &&
+        Number.isFinite(Number(aqiData.aqi));
+
+    const aqiValue = connected && hasIndex
+        ? Number(aqiData.aqi)
+        : "--";
+
+    const aqiStatus = !connected
+        ? "Arduino disconnected"
+        : hasIndex
+            ? (aqiData.status || "Calculated")
+            : "Waiting for calculation";
+
+    const indexColor = !hasIndex || !connected
+        ? "var(--muted)"
+        : Number(aqiValue) <= 20
+            ? "#16a34a"
+            : Number(aqiValue) <= 40
+                ? "#ca8a04"
+                : Number(aqiValue) <= 60
+                    ? "#ea580c"
+                    : "#dc2626";
 
     const card = document.createElement("div");
     card.className = "sensor-card";
@@ -4213,80 +4291,127 @@ async function loadArduinoSensorCard() {
         ? new Date(reading.timestamp).toLocaleTimeString()
         : "No reading received yet";
 
+    // Same visual structure as the existing sensor cards.
     card.innerHTML = `
+
         <div class="sensor-head">
-            
+
             <div>
-                <div class="sensor-name">🔌 Arduino Uno — AQI Sensors</div>
-                <div class="sensor-location">
-                
-                <div id="arduinoAqiValue"
-                    style="font-size:24px;font-weight:700;margin-top:4px;">
-                    --
+                <div class="sensor-name">
+                    🔌 Arduino Uno
                 </div>
+
+                <div class="sensor-location">
+                    USB Sensor Station
                 </div>
             </div>
 
             <span class="sensor-status"
                   style="color:${connected ? '#16a34a' : '#dc2626'};">
-                ${connected ? '● Online' : '● Offline'}
+                ${connected ? "● Online" : "● Offline"}
             </span>
+
         </div>
 
-        
+
+        <div class="sensor-aqi">
+
+            <div
+                class="sensor-aqi-number"
+                style="color:${indexColor};"
+            >
+                ${aqiValue}
             </div>
+
+            <div>
+                <div style="font-weight:650;font-size:13px;">
+                    AQI
+                </div>
+
+                <div class="sensor-category">
+                    ${escapeHTML(aqiStatus)}
+                </div>
+            </div>
+
+        </div>
+
+
         <div class="measurement-grid">
+
             <div class="measurement">
                 <div class="measurement-label">
                     PM2.5
                 </div>
+
                 <div class="measurement-value">
                     ${formatValue(reading.dust_adc, 0)}
                     <small>µg/m³</small>
                 </div>
             </div>
 
+
             <div class="measurement">
                 <div class="measurement-label">
                     PM10
                 </div>
+
                 <div class="measurement-value">
                     ${formatValue(reading.mq135_adc, 0)}
                     <small>µg/m³</small>
                 </div>
             </div>
 
+
             <div class="measurement">
-                <div class="measurement-label">Temperature</div>
+                <div class="measurement-label">
+                    Temperature
+                </div>
+
                 <div class="measurement-value">
                     ${formatValue(reading.temperature_c, 1)}°C
                 </div>
             </div>
 
+
             <div class="measurement">
-                <div class="measurement-label">Humidity</div>
+                <div class="measurement-label">
+                    Humidity
+                </div>
+
                 <div class="measurement-value">
                     ${formatValue(reading.humidity, 1)}%
                 </div>
             </div>
+
         </div>
+
 
         <div style="margin-top:12px;font-size:11px;color:var(--muted);">
             Dust ADC:
             <strong>${formatValue(reading.dust_adc, 0)}</strong>
+
             &nbsp;|&nbsp;
+
             MQ-135 ADC:
             <strong>${formatValue(reading.mq135_adc, 0)}</strong>
         </div>
 
+
         <div class="sensor-footer">
-            <span>${connected ? '🟢 Active' : '🔴 Offline'}</span>
-            <span>Updated ${escapeHTML(updated)}</span>
+
+            <span>
+                ${connected ? "🟢 Active" : "🔴 Offline"}
+            </span>
+
+            <span>
+                Updated ${escapeHTML(updated)}
+            </span>
+
         </div>
 
     `;
-    
 
+    // Append the Arduino card without removing the other sensor cards.
     grid.appendChild(card);
 }
 
@@ -4325,30 +4450,19 @@ async function loadExperimentalIndex() {
        ALERTS
     ===================================================== */
 
- 
-function displayAlerts(alerts) {
-    console.log("DISPLAY ALERTS FUNCTION LOADED");
-     console.log("displayAlerts() called with:", alerts);
-    console.log(
-        "Received alert count:",
-        Array.isArray(alerts) ? alerts.length : "not an array"
-    );
 
+let allDashboardAlerts = [];
+let currentAlertPage = 1;
+const alertsPerPage = 10;
+
+function displayAlerts(alerts) {
     const section = document.getElementById("alerts-section");
     const list = document.getElementById("alerts-list");
 
     if (!section || !list) return;
 
-    // Keep the complete list separate from the displayed alerts.
-    const allAlerts = Array.isArray(alerts) ? alerts : [];
+    allDashboardAlerts = Array.isArray(alerts) ? [...alerts] : [];
 
-    if (allAlerts.length === 0) {
-        section.style.display = "none";
-        list.innerHTML = "";
-        return;
-    }
-
-    // Get alert timestamps from common field names.
     function getAlertTime(alert) {
         const value =
             alert.timestamp ??
@@ -4361,7 +4475,6 @@ function displayAlerts(alerts) {
             return 0;
         }
 
-        // Support Unix timestamps in seconds or milliseconds.
         if (typeof value === "number") {
             return value < 1e12 ? value * 1000 : value;
         }
@@ -4370,26 +4483,60 @@ function displayAlerts(alerts) {
         return Number.isNaN(parsed) ? 0 : parsed;
     }
 
-    // Sort newest first, without modifying the original array.
-    const sortedAlerts = [...allAlerts].sort(
+    // Newest alerts first.
+    allDashboardAlerts.sort(
         (a, b) => getAlertTime(b) - getAlertTime(a)
     );
 
-    // Only five alerts are rendered in the dashboard.
-    const latestAlerts = sortedAlerts.slice(0, 5);
-    console.log("Total alerts received:", allAlerts.length);
-    console.log("Alerts selected for display:", latestAlerts.length);
+    currentAlertPage = 1;
+    renderAlertPage();
+}
 
+function renderAlertPage() {
+    const section = document.getElementById("alerts-section");
+    const list = document.getElementById("alerts-list");
+
+    if (!section || !list) return;
+
+    const totalAlerts = allDashboardAlerts.length;
+        if (totalAlerts === 0) {
+            section.style.display = "none";
+            list.innerHTML = "";
+
+            const pagination = document.getElementById("alerts-pagination");
+            if (pagination) {
+                pagination.innerHTML = "";
+            }
+
+            return;
+        }
     section.style.display = "block";
+
+    const totalPages = Math.ceil(totalAlerts / alertsPerPage);
+
+    currentAlertPage = Math.min(
+        Math.max(currentAlertPage, 1),
+        totalPages
+    );
+
+    const startIndex = (currentAlertPage - 1) * alertsPerPage;
+    const pageAlerts = allDashboardAlerts.slice(
+        startIndex,
+        startIndex + alertsPerPage
+            );
+            console.log("Total alerts:", allDashboardAlerts.length);
+        console.log("Alerts on current page:", pageAlerts.length);
+        console.log("Current page:", currentAlertPage);
+
     list.innerHTML = "";
 
-    latestAlerts.forEach(alert => {
-        const severity = (
+    pageAlerts.forEach(alert => {
+        const severity = String(
             alert.severity || "medium"
         ).toLowerCase();
 
         let icon = "⚠️";
-        let label = "Moderate";
+        let label = "Medium";
         let colorClass = "medium";
 
         if (severity === "critical") {
@@ -4405,12 +4552,9 @@ function displayAlerts(alerts) {
             severity === "normal"
         ) {
             icon = "🟢";
-            label = "Normal";
+            label = severity === "normal" ? "Normal" : "Low";
             colorClass = "low";
         }
-
-        const item = document.createElement("div");
-        item.className = `alert-item ${colorClass}`;
 
         const message = escapeHTML(
             alert.message || "Air quality alert"
@@ -4418,10 +4562,28 @@ function displayAlerts(alerts) {
 
         const aqi = alert.aqi ?? alert.AQI;
 
-        const timestamp = getAlertTime(alert);
+        const value =
+            alert.timestamp ??
+            alert.created_at ??
+            alert.createdAt ??
+            alert.time ??
+            alert.date;
+
+        let timestamp = 0;
+
+        if (typeof value === "number") {
+            timestamp = value < 1e12 ? value * 1000 : value;
+        } else if (value) {
+            const parsed = Date.parse(value);
+            timestamp = Number.isNaN(parsed) ? 0 : parsed;
+        }
+
         const timeText = timestamp
             ? new Date(timestamp).toLocaleString()
             : "Time unavailable";
+
+        const item = document.createElement("div");
+        item.className = `alert-item ${colorClass}`;
 
         item.innerHTML = `
             <div class="alert-icon">${icon}</div>
@@ -4429,6 +4591,7 @@ function displayAlerts(alerts) {
             <div class="alert-message">
                 <strong>${label} Air Quality Alert</strong>
                 <p>${message}</p>
+
                 ${
                     aqi !== undefined && aqi !== null
                     ? `<span class="alert-aqi">AQI: ${escapeHTML(String(aqi))}</span>`
@@ -4440,14 +4603,79 @@ function displayAlerts(alerts) {
                 <span class="alert-severity-badge ${colorClass}">
                     ${label}
                 </span>
-                <div class="alert-time">${escapeHTML(timeText)}</div>
+
+                <div class="alert-time">
+                    ${escapeHTML(timeText)}
+                </div>
             </div>
         `;
 
         list.appendChild(item);
     });
-}
 
+    // Create pagination controls.
+    let pagination = document.getElementById("alerts-pagination");
+
+    if (!pagination) {
+        pagination = document.createElement("div");
+        pagination.id = "alerts-pagination";
+        pagination.style.cssText =
+            "display:flex;align-items:center;justify-content:space-between;" +
+            "gap:12px;flex-wrap:wrap;margin-top:16px;";
+
+        list.insertAdjacentElement("afterend", pagination);
+    }
+
+    const firstRecord = startIndex + 1;
+    const lastRecord = Math.min(
+        startIndex + alertsPerPage,
+        totalAlerts
+    );
+
+    pagination.innerHTML = `
+        <span style="font-size:13px;color:var(--muted);">
+            Showing ${firstRecord}–${lastRecord} of ${totalAlerts} alerts
+        </span>
+
+        <div style="display:flex;align-items:center;gap:8px;">
+            <button
+                type="button"
+                id="alerts-prev"
+                ${currentAlertPage === 1 ? "disabled" : ""}
+                style="padding:7px 12px;cursor:pointer;"
+            >
+                Previous
+            </button>
+
+            <span style="font-size:13px;">
+                Page ${currentAlertPage} of ${totalPages}
+            </span>
+
+            <button
+                type="button"
+                id="alerts-next"
+                ${currentAlertPage === totalPages ? "disabled" : ""}
+                style="padding:7px 12px;cursor:pointer;"
+            >
+                Next
+            </button>
+        </div>
+    `;
+
+    document.getElementById("alerts-prev").onclick = () => {
+        if (currentAlertPage > 1) {
+            currentAlertPage--;
+            renderAlertPage();
+        }
+    };
+
+    document.getElementById("alerts-next").onclick = () => {
+        if (currentAlertPage < totalPages) {
+            currentAlertPage++;
+            renderAlertPage();
+        }
+    };
+}
 
 async function loadArduinoAnalytics() {
     const status = document.getElementById("arduinoAnalyticsStatus");
@@ -4816,7 +5044,11 @@ function escapeHtml(value) {
     });
 }
 
-/* Render saved AQI history and apply filters */
+/* Render saved AQI history with cards and pagination */
+
+let alertHistoryCurrentPage = 1;
+const alertHistoryPageSize = 10;
+
 function renderAlertHistory() {
     const list = document.getElementById("alertHistoryList");
     const status = document.getElementById("alertHistoryStatus");
@@ -4826,77 +5058,270 @@ function renderAlertHistory() {
         return;
     }
 
+    const searchText = (
+        document.getElementById("alertSearch")?.value || ""
+    ).trim().toLowerCase();
+
     const sensorFilter =
         document.getElementById("alertSensorFilter")?.value || "all";
 
+    // Correct capitalization: alertSeverityFilter
     const levelFilter =
-        document.getElementById("alertSeverityfilter")?.value || "all";
+        document.getElementById("alertSeverityFilter")?.value || "all";
 
     const alerts = Array.isArray(historicalAlerts)
         ? historicalAlerts
         : [];
 
-    const filteredAlerts = alerts.filter(alert => {
-        const sensorMatches =
-            sensorFilter === "all" || alert.node_id === sensorFilter;
+    function getSeverity(alert) {
+        const severity = String(alert.severity || "").toLowerCase();
 
-        const severity = String(alert.severity || "normal").toLowerCase();
+        if (["critical", "high", "normal", "low", "medium"].includes(severity)) {
+            return severity;
+        }
 
-        const levelMatches =
-            levelFilter === "all" || severity === levelFilter.toLowerCase();
+        const aqi = Number(alert.aqi ?? alert.AQI ?? alert.aqi_value);
 
-        return sensorMatches && levelMatches;
-    });
+        if (Number.isFinite(aqi)) {
+            if (aqi > 300) return "critical";
+            if (aqi > 200) return "high";
+        }
+
+        return "normal";
+    }
+
+    function getTime(alert) {
+        const value =
+            alert.timestamp ??
+            alert.created_at ??
+            alert.createdAt ??
+            alert.time ??
+            alert.date;
+
+        if (typeof value === "number") {
+            return value < 1e12 ? value * 1000 : value;
+        }
+
+        if (value) {
+            const parsed = Date.parse(value);
+            return Number.isNaN(parsed) ? 0 : parsed;
+        }
+
+        return 0;
+    }
+
+    
+        const filteredAlerts = alerts
+            .filter(alert => {
+                const sensorName = String(
+                    alert.sensor_name ||
+                    alert.node_id ||
+                    alert.source ||
+                    alert.sensor_type ||
+                    "Unknown sensor"
+                );
+
+                const searchableText = [
+                    sensorName,
+                    alert.node_id,
+                    alert.sensor_name,
+                    alert.source,
+                    alert.sensor_type,
+                    alert.message
+                ]
+                    .filter(Boolean)
+                    .join(" ")
+                    .toLowerCase();
+
+                const severity = getSeverity(alert);
+
+                const sensorId = String(
+                    alert.node_id ||
+                    alert.sensor_name ||
+                    alert.source ||
+                    ""
+                );
+
+                const sensorMatches =
+                    sensorFilter === "all" ||
+                    sensorId === sensorFilter;
+
+                const searchMatches =
+                    searchableText.includes(searchText);
+
+                const levelMatches =
+                    levelFilter === "all" || severity === levelFilter;
+
+                return sensorMatches && searchMatches && levelMatches;
+            })
+            .sort((a, b) => getTime(b) - getTime(a));
 
     if (filteredAlerts.length === 0) {
+        alertHistoryCurrentPage = 1;
+
         list.innerHTML = `
             <div class="alert-empty-state">
                 <div class="empty-icon">📋</div>
                 <h3>No matching AQI records</h3>
-                <p>Try selecting a different sensor or alert level.</p>
+                <p>Try changing your search or alert filters.</p>
             </div>
         `;
 
         if (status) {
             status.textContent = "No records match the selected filters.";
         }
+
         return;
     }
 
-    list.innerHTML = filteredAlerts.map(alert => {
-        const severity = String(alert.severity || "normal").toLowerCase();
-        const aqi = Number(alert.aqi);
-        const safeAqi = Number.isFinite(aqi) ? aqi.toFixed(1) : "N/A";
+    const totalPages = Math.ceil(
+        filteredAlerts.length / alertHistoryPageSize
+    );
 
-        const timestamp = alert.timestamp
-            ? new Date(alert.timestamp).toLocaleString()
+    alertHistoryCurrentPage = Math.min(
+        Math.max(alertHistoryCurrentPage, 1),
+        totalPages
+    );
+
+    const startIndex =
+        (alertHistoryCurrentPage - 1) * alertHistoryPageSize;
+
+    const pageAlerts = filteredAlerts.slice(
+        startIndex,
+        startIndex + alertHistoryPageSize
+    );
+
+    const cards = pageAlerts.map(alert => {
+        const severity = getSeverity(alert);
+
+        const severityLabel = {
+            critical: "CRITICAL",
+            high: "HIGH",
+            medium: "MEDIUM",
+            low: "LOW",
+            normal: "NORMAL"
+        }[severity] || "NORMAL";
+
+        const aqiValue = alert.aqi ?? alert.AQI ?? alert.aqi_value;
+        const aqiNumber = Number(aqiValue);
+
+        const safeAqi =
+            aqiValue !== null &&
+            aqiValue !== undefined &&
+            aqiValue !== "" &&
+            Number.isFinite(aqiNumber)
+                ? aqiNumber.toFixed(1)
+                : "N/A";
+
+        const sensorName =
+            alert.sensor_name || alert.node_id || "Unknown sensor";
+
+        const timestamp = getTime(alert);
+
+        const timeText = timestamp
+            ? new Date(timestamp).toLocaleString("en-IN")
             : "Time unavailable";
 
+        const category = alert.category || "AQI record";
+
+        const pollutant =
+            alert.dominant_pollutant || "N/A";
+
+        const message =
+            alert.message || "Historical air quality measurement.";
+
+        const cardClass =
+            severity === "critical" || severity === "high"
+                ? severity
+                : "";
+
         return `
-            <div class="alert-item">
-                <div class="alert-content">
-                    <strong>${escapeHtml(alert.sensor_name || "Unknown sensor")}</strong>
-                    <p>${escapeHtml(alert.message || "AQI record")}</p>
-                    <small>
-                        AQI: ${safeAqi}
-                        &bull; ${escapeHtml(alert.category || "Unknown")}
-                        &bull; Pollutant: ${escapeHtml(alert.dominant_pollutant || "N/A")}
-                    </small>
-                    <small>${escapeHtml(timestamp)}</small>
+            <article class="friendly-alert-card ${cardClass}">
+                <div>
+                    <h3 class="alert-card-title">
+                        ${escapeHtml(sensorName)}
+                    </h3>
+
+                    <p class="alert-card-message">
+                        ${escapeHtml(message)}
+                    </p>
+
+                    <div class="alert-card-meta">
+                        <span>🕒 ${escapeHtml(timeText)}</span>
+                        <span>📊 ${escapeHtml(category)}</span>
+                        <span>🫧 Pollutant: ${escapeHtml(pollutant)}</span>
+                    </div>
                 </div>
-                <span class="alert-severity severity-${escapeHtml(severity)}">
-                    ${escapeHtml(severity.toUpperCase())}
-                </span>
-            </div>
+
+                <div class="alert-aqi-value">
+                    <strong>${safeAqi}</strong>
+                    <span class="alert-severity ${cardClass}">
+                        ${severityLabel}
+                    </span>
+                </div>
+            </article>
         `;
     }).join("");
 
+    const firstRecord = startIndex + 1;
+    const lastRecord = Math.min(
+        startIndex + alertHistoryPageSize,
+        filteredAlerts.length
+    );
+
+    list.innerHTML = `
+        ${cards}
+
+        <div class="alert-pagination">
+            <span>
+                Showing ${firstRecord}–${lastRecord}
+                of ${filteredAlerts.length} records
+            </span>
+
+            <div class="alert-page-buttons">
+                <button
+                    type="button"
+                    id="historyPrev"
+                    ${alertHistoryCurrentPage === 1 ? "disabled" : ""}
+                >
+                    ← Previous
+                </button>
+
+                <button type="button" disabled>
+                    Page ${alertHistoryCurrentPage} of ${totalPages}
+                </button>
+
+                <button
+                    type="button"
+                    id="historyNext"
+                    ${alertHistoryCurrentPage === totalPages ? "disabled" : ""}
+                >
+                    Next →
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.getElementById("historyPrev").onclick = () => {
+        if (alertHistoryCurrentPage > 1) {
+            alertHistoryCurrentPage--;
+            renderAlertHistory();
+        }
+    };
+
+    document.getElementById("historyNext").onclick = () => {
+        if (alertHistoryCurrentPage < totalPages) {
+            alertHistoryCurrentPage++;
+            renderAlertHistory();
+        }
+    };
+
     if (status) {
         status.textContent =
-            `Showing ${filteredAlerts.length} of ${alerts.length} AQI records.`;
+            `Loaded ${alerts.length} saved records. ` +
+            `Showing ${firstRecord}–${lastRecord} matching records.`;
     }
 }
-
 
 /* =====================================================
    HISTORICAL ALERTS
